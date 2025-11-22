@@ -1,0 +1,19 @@
+# IDE
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Build
+target/
+build/
+!mvnw*
+!gradlew*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
