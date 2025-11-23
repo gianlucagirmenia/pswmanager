@@ -10,23 +10,43 @@ import java.util.Optional;
 
 @Service
 public class PasswordEntryService {
-
+    
     @Autowired
-    private PasswordEntryRepository passwordEntryRepository;
-
+    private PasswordEntryRepository repository;
+    
     public List<PasswordEntry> findAll() {
-        return passwordEntryRepository.findAll();
+        return repository.findAll();
     }
-
+    
     public Optional<PasswordEntry> findById(Long id) {
-        return passwordEntryRepository.findById(id);
+        return repository.findById(id);
     }
-
-    public PasswordEntry save(PasswordEntry passwordEntry) {
-        return passwordEntryRepository.save(passwordEntry);
+    
+    public PasswordEntry save(PasswordEntry entry) {
+        return repository.save(entry);
     }
-
+    
     public void deleteById(Long id) {
-        passwordEntryRepository.deleteById(id);
+        repository.deleteById(id);
+    }
+    
+    public List<PasswordEntry> searchByTitle(String title) {
+        return repository.findByTitleContainingIgnoreCase(title);
+    }
+    
+    public List<PasswordEntry> searchAllFields(String query) {
+        return repository.searchAllFields(query);
+    }
+    
+    public List<PasswordEntry> findByCategory(String category) {
+        return repository.findByCategory(category);
+    }
+    
+    public List<PasswordEntry> findAllByOrderByTitleAsc() {
+        return repository.findAllByOrderByTitleAsc();
+    }
+    
+    public List<PasswordEntry> findAllByOrderByCreatedAtDesc() {
+        return repository.findAllByOrderByCreatedAtDesc();
     }
 }
