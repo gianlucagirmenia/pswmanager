@@ -23,4 +23,7 @@ public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Lo
     List<PasswordEntry> findAllByOrderByTitleAsc();
     
     List<PasswordEntry> findAllByOrderByCreatedAtDesc();
+    
+    @Query("SELECT new com.durdencorp.pswmanager.model.PasswordEntry(p.id, p.title, p.encryptedPassword) FROM PasswordEntry p WHERE p.encryptedPassword IS NOT NULL")
+    List<PasswordEntry> findAllEncrypted();
 }

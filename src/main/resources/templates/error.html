@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Errore</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f8f9fa; 
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .error-container { 
+            max-width: 500px; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 { 
+            color: #e74c3c; 
+            margin-bottom: 20px;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        button { 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            margin: 10px 5px; 
+            border-radius: 4px; 
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>❌ Errore</h1>
+        <div class="error-message" th:text="${errorMessage}">Si è verificato un errore</div>
+        <div>
+            <a href="/" class="button">Torna alla Home</a>
+            <a href="/login" class="button">Riaccedi</a>
+        </div>
+    </div>
+</body>
+</html>

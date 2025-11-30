@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager - Accesso</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f8f9fa; 
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-container { 
+            max-width: 400px; 
+            width: 100%;
+            background: white; 
+            padding: 40px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 { 
+            color: #2c3e50; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .success-message { 
+            background: #d4edda; 
+            color: #155724; 
+            padding: 12px; 
+            border-radius: 5px; 
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            box-sizing: border-box; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 16px;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        button { 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            cursor: pointer; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .info-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+            border-radius: 4px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>🔐 Password Manager</h1>
+        
+        <!-- Messaggio di successo -->
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        
+        <!-- Messaggio di errore -->
+        <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+        
+		<div class="info-box">
+		    <h3>🔒 Accesso Sicuro</h3>
+		    <p><strong>Primo accesso?</strong> Inserisci una nuova Master Password che ricorderai.</p>
+		    <p><strong>Accesso successivo?</strong> Inserisci la stessa Master Password usata precedentemente.</p>
+		    <p><strong>Nota:</strong> Se inserisci una password diversa da quella originale, l'accesso sarà negato e non potrai vedere le password salvate.</p>
+		</div>
+        
+        <form th:action="@{/login}" method="post">
+            <input type="password" name="masterPassword" 
+                   placeholder="Inserisci Master Password" required
+                   autocomplete="off">
+            <button type="submit">🔓 Accedi</button>
+        </form>
+        
+        <div style="margin-top: 20px; font-size: 14px; color: #6c757d;">
+            <p><strong>Primo accesso?</strong> Inserisci una nuova Master Password che ricorderai.</p>
+        </div>
+    </div>
+</body>
+</html>

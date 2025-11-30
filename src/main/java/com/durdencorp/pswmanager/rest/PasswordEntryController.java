@@ -82,11 +82,13 @@ public class PasswordEntryController {
         return passwordEntryService.searchByTitle(title);
     }
     
+    /*
     // SEARCH in tutti i campi
     @GetMapping("/search/all")
     public List<PasswordEntry> searchAllFields(@RequestParam String query) {
         return passwordEntryService.searchAllFields(query);
     }
+    */
     
     // GET per categoria
     @GetMapping("/category/{category}")
@@ -94,15 +96,19 @@ public class PasswordEntryController {
         return passwordEntryService.findByCategory(category);
     }
     
+    /*
     // GET ordinate per titolo
     @GetMapping("/sorted/title")
     public List<PasswordEntry> getAllSortedByTitle() {
         return passwordEntryService.findAllByOrderByTitleAsc();
     }
+    */
     
+    /*
     // GET ordinate per data
     @GetMapping("/sorted/date")
     public List<PasswordEntry> getAllSortedByDate() {
         return passwordEntryService.findAllByOrderByCreatedAtDesc();
     }
+    */
 }

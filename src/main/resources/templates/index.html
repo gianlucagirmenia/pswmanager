@@ -13,7 +13,7 @@
             color: #333;
         }
         .container { 
-            max-width: 1000px; 
+            max-width: 1200px; 
             margin: 0 auto; 
             background: white; 
             padding: 30px; 
@@ -26,87 +26,6 @@
             margin-bottom: 30px;
             border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
-        }
-        .password-form { 
-            background: #f8f9fa; 
-            padding: 25px; 
-            border-radius: 8px; 
-            margin-bottom: 30px; 
-            border-left: 4px solid #3498db;
-        }
-        .password-item { 
-            background: white; 
-            padding: 20px; 
-            margin: 15px 0; 
-            border: 1px solid #e1e8ed; 
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .password-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-        }
-        input, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            box-sizing: border-box; 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
-            font-size: 16px;
-        }
-        input:focus, textarea:focus {
-            border-color: #3498db;
-            outline: none;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-        }
-        button { 
-            background: #3498db; 
-            color: white; 
-            border: none; 
-            padding: 12px 20px; 
-            cursor: pointer; 
-            margin: 5px 5px 5px 0; 
-            border-radius: 4px; 
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background: #2980b9;
-        }
-        .delete-btn { 
-            background: #e74c3c; 
-        }
-        .delete-btn:hover {
-            background: #c0392b;
-        }
-        .show-password-btn { 
-            background: #95a5a6; 
-            margin-left: 5px; 
-        }
-        .show-password-btn:hover {
-            background: #7f8c8d;
-        }
-        .copy-btn { 
-            background: #27ae60; 
-            margin-left: 5px;
-        }
-        .copy-btn:hover {
-            background: #219653;
-        }
-        .clear-btn {
-            background: #f39c12;
-        }
-        .clear-btn:hover {
-            background: #d35400;
-        }
-        .password-container { 
-            display: flex; 
-            align-items: center;
-        }
-        .password-input { 
-            flex: 1; 
         }
         .success-message { 
             background: #d4edda; 
@@ -124,10 +43,85 @@
             margin-bottom: 20px;
             border-left: 4px solid #dc3545;
         }
-        .password-display-container {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
+        button { 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            margin: 5px 5px 5px 0; 
+            border-radius: 4px; 
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .delete-btn { 
+            background: #e74c3c; 
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        .edit-btn {
+            background: #f39c12;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .edit-btn:hover {
+            background: #d35400;
+        }
+        .show-password-btn { 
+            background: #95a5a6; 
+            margin-left: 5px; 
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .show-password-btn:hover {
+            background: #7f8c8d;
+        }
+        .copy-btn { 
+            background: #27ae60; 
+            margin-left: 5px;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .copy-btn:hover {
+            background: #219653;
+        }
+        .new-btn {
+            background: #3498db;
+            margin-bottom: 20px;
+        }
+        .new-btn:hover {
+            background: #2980b9;
+        }
+        
+        /* Stili per la tabella */
+        .password-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .password-table th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .password-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        .password-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .password-table tr:last-child td {
+            border-bottom: none;
         }
         .password-display {
             font-family: 'Courier New', monospace;
@@ -135,42 +129,74 @@
             padding: 5px 10px;
             border-radius: 4px;
             border: 1px dashed #ccc;
-            flex: 1;
+            display: inline-block;
+            min-width: 150px;
         }
-        .password-actions {
+        .action-buttons {
             display: flex;
             gap: 5px;
-        }
-        .password-meta {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 10px;
-            border-top: 1px solid #ecf0f1;
-            padding-top: 10px;
         }
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #7f8c8d;
+            font-style: italic;
         }
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            display: block;
+        .url-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .form-actions {
+        .notes-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
             display: flex;
+            align-items: center;
             gap: 10px;
         }
+
+        .search-input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .clear-search-btn {
+            background: #6c757d;
+            padding: 10px 15px;
+        }
+
+        .clear-search-btn:hover {
+            background: #5a6268;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
             }
-            .password-actions {
+            .action-buttons {
                 flex-direction: column;
             }
-            .form-actions {
-                flex-direction: column;
+            .password-table {
+                display: block;
+                overflow-x: auto;
             }
         }
     </style>
@@ -185,134 +211,126 @@
         <!-- Messaggio di errore -->
         <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
         
-        <!-- Form per aggiungere password -->
-        <div class="password-form">
-            <h3>➕ Aggiungi Nuova Password</h3>
-            <form th:action="@{/add}" method="post" id="passwordForm" th:object="${newPassword}">
-                <input type="text" th:field="*{title}" placeholder="Titolo (es. Google, Facebook)" required>
-                <input type="text" th:field="*{username}" placeholder="Username/Email" required>
-                
-                <!-- Campo password con toggle -->
-                <div class="password-container">
-                    <input type="password" th:field="*{encryptedPassword}" id="passwordField" 
-                           placeholder="Password" class="password-input" required>
-                    <button type="button" class="show-password-btn" onclick="togglePasswordVisibility()">
-                        👁️ Mostra
-                    </button>
-                </div>
-                
-                <input type="url" th:field="*{url}" placeholder="URL (opzionale)">
-                <textarea th:field="*{notes}" placeholder="Note (opzionale)" rows="3"></textarea>
-                
-                <div class="form-actions">
-                    <button type="submit">💾 Salva Password</button>
-                    <button type="button" class="clear-btn" onclick="clearForm()">🗑️ Pulisci Form</button>
-                </div>
-            </form>
+        <!-- Barra superiore con pulsante nuovo e ricerca -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a th:href="@{/new}" class="new-btn" style="text-decoration: none; color: white; display: inline-block;">➕ Inserisci Nuovo Elemento</a>
+			<a th:href="@{/logout}" class="clear-search-btn" style="text-decoration: none; color: white; display: inline-block;">🚪 Logout</a>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" 
+                       placeholder="🔍 Cerca per titolo...">
+                <button onclick="clearSearch()" class="clear-search-btn">Pulisci Ricerca</button>
+            </div>
         </div>
 
-        <!-- Lista password esistenti -->
-        <div class="password-list">
-            <h3>📋 Le tue Password</h3>
-            <div th:if="${passwords.empty}">
-                <div class="empty-state">
-                    <i>🔒</i>
-                    <p>Nessuna password salvata. Aggiungine una!</p>
-                </div>
-            </div>
-            <div th:each="password : ${passwords}" class="password-item">
-                <h4 th:text="${password.title}">Titolo</h4>
-                <p><strong>👤 Username:</strong> <span th:text="${password.username}"></span></p>
-                
-                <!-- Password con azioni -->
-                <div class="password-display-container">
-                    <span class="password-display" th:text="${password.encryptedPassword}"></span>
-                    <div class="password-actions">
-                        <button type="button" class="show-password-btn" onclick="toggleDisplayPassword(this)">
-                            👁️
-                        </button>
-                        <button type="button" class="copy-btn" onclick="copyPassword(this, '[[${password.encryptedPassword}]]')">
-                            📋
-                        </button>
-                    </div>
-                </div>
-                
-                <p th:if="${password.url}">
-                    <strong>🌐 URL:</strong> 
-                    <a th:href="${password.url}" th:text="${password.url}" target="_blank"></a>
-                </p>
-                <p th:if="${password.notes}">
-                    <strong>📝 Note:</strong> 
-                    <span th:text="${password.notes}"></span>
-                </p>
-                
-                <!-- Metadati -->
-                <div class="password-meta">
-                    <small>
-                        <strong>Creata il:</strong> 
-                        <span th:text="${#temporals.format(password.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
-                        <span th:if="${password.updatedAt != password.createdAt}">
-                            | <strong>Modificata il:</strong> 
-                            <span th:text="${#temporals.format(password.updatedAt, 'dd/MM/yyyy HH:mm')}"></span>
-                        </span>
-                    </small>
-                </div>
-                
-                <!-- Azioni -->
-                <div style="margin-top: 15px;">
-                    <a th:href="@{/delete/{id}(id=${password.id})}" class="delete-btn" 
-                       onclick="return confirm('Sei sicuro di voler eliminare questa password?')"
-                       style="text-decoration: none; color: white; display: inline-block;">
-                        🗑️ Elimina
-                    </a>
-                </div>
-            </div>
+        <!-- Messaggio nessun risultato -->
+        <div id="noResults" class="no-results">
+            <p>Nessuna password trovata con questo titolo.</p>
         </div>
+        
+		<!-- Tabella password esistenti -->
+		<div class="password-list">
+		    <h3>📋 Le tue Password</h3>
+		    
+		    <!-- Messaggio di errore aggiuntivo -->
+		    <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+		    
+		    <!-- Verifica se passwords è null o vuoto -->
+		    <div th:if="${passwords == null or passwords.empty}">
+		        <div class="empty-state">
+		            <p th:if="${passwords == null}">
+		                ❌ Errore nel caricamento dei dati. 
+		                <a th:href="@{/logout}">Riaccedi</a> o 
+		                <a th:href="@{/login}">reinserisci la master password</a>.
+		            </p>
+		            <p th:if="${passwords != null and passwords.empty}">
+		                Nessuna password salvata. 
+		                <a th:href="@{/new}">Aggiungine una!</a>
+		            </p>
+		        </div>
+		    </div>
+		    
+		    <table th:if="${passwords != null and !passwords.empty}" class="password-table">
+		        <!-- Il resto della tabella rimane uguale -->
+		        <thead>
+		            <tr>
+		                <th>Titolo</th>
+		                <th>Username</th>
+		                <th>Password</th>
+		                <th>URL</th>
+		                <th>Note</th>
+		                <th>Data Creazione</th>
+		                <th>Azioni</th>
+		            </tr>
+		        </thead>
+		        <tbody>
+		            <tr th:each="password : ${passwords}">
+		                <td th:text="${password.title}"></td>
+		                <td th:text="${password.username}"></td>
+		                <td>
+		                    <span class="password-display" 
+		                          th:text="${password.encryptedPassword}"
+		                          th:attr="data-real-password=${password.encryptedPassword}"></span>
+		                    <div class="action-buttons">
+		                        <button type="button" class="show-password-btn" 
+		                                onclick="toggleDisplayPassword(this)">
+		                            👁️
+		                        </button>
+		                        <button type="button" class="copy-btn" 
+		                                onclick="copyPassword(this, '[[${password.encryptedPassword}]]')">
+		                            📋
+		                        </button>
+		                    </div>
+		                </td>
+		                <td class="url-cell">
+		                    <a th:if="${password.url}" th:href="${password.url}" th:text="${password.url}" target="_blank"></a>
+		                    <span th:unless="${password.url}">-</span>
+		                </td>
+		                <td class="notes-cell" th:title="${password.notes}">
+		                    <span th:if="${password.notes}" th:text="${password.notes}"></span>
+		                    <span th:unless="${password.notes}">-</span>
+		                </td>
+		                <td th:text="${#temporals.format(password.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+		                <td>
+		                    <div class="action-buttons">
+		                        <a th:href="@{/edit/{id}(id=${password.id})}" class="edit-btn" 
+		                           style="text-decoration: none; color: white; display: inline-block;">
+		                            ✏️ Modifica
+		                        </a>
+		                        <a th:href="@{/delete/{id}(id=${password.id})}" class="delete-btn" 
+		                           onclick="return confirm('Sei sicuro di voler eliminare questa password?')"
+		                           style="text-decoration: none; color: white; display: inline-block;">
+		                            🗑️ Elimina
+		                        </a>
+		                    </div>
+		                </td>
+		            </tr>
+		        </tbody>
+		    </table>
+		</div>
     </div>
 
     <script>
-        // Funzione per mostrare/nascondere la password nel form
-        function togglePasswordVisibility() {
-            const passwordField = document.getElementById('passwordField');
-            const button = event.target;
-            
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                button.textContent = '🙈 Nascondi';
-                button.classList.add('active');
-            } else {
-                passwordField.type = 'password';
-                button.textContent = '👁️ Mostra';
-                button.classList.remove('active');
-            }
-        }
-        
-        // Funzione per mostrare/nascondere la password nella lista
+        // Funzione per mostrare/nascondere la password nella tabella
         function toggleDisplayPassword(button) {
-            const passwordDisplay = button.parentElement.previousElementSibling;
+            const tableRow = button.closest('tr');
+            const passwordDisplay = tableRow.querySelector('.password-display');
+            const originalPassword = passwordDisplay.getAttribute('data-password');
             
-            if (passwordDisplay.style.webkitTextSecurity === 'none' || 
-                passwordDisplay.style.textSecurity === 'none') {
-                // Nascondi password
-                passwordDisplay.style.webkitTextSecurity = 'disc';
-                passwordDisplay.style.textSecurity = 'disc';
-                passwordDisplay.style.fontFamily = 'Courier New, monospace';
+            if (passwordDisplay.textContent === originalPassword) {
+                passwordDisplay.textContent = '•'.repeat(originalPassword.length);
                 button.textContent = '👁️';
                 button.title = 'Mostra password';
             } else {
-                // Mostra password
-                passwordDisplay.style.webkitTextSecurity = 'none';
-                passwordDisplay.style.textSecurity = 'none';
-                passwordDisplay.style.fontFamily = 'Courier New, monospace';
+                passwordDisplay.textContent = originalPassword;
                 button.textContent = '🙈';
                 button.title = 'Nascondi password';
             }
         }
-        
+
         // Funzione per copiare la password
         function copyPassword(button, passwordText) {
             navigator.clipboard.writeText(passwordText).then(function() {
-                // Feedback visivo
                 const originalText = button.textContent;
                 button.textContent = '✅';
                 button.style.background = '#27ae60';
@@ -327,49 +345,59 @@
                 alert('Errore nella copia della password. Controlla i permessi del browser.');
             });
         }
-        
-        // Funzione per pulire tutto il form
-        function clearForm() {
-            document.getElementById('passwordForm').reset();
-            // Reset manuale del campo password per sicurezza
-            document.getElementById('passwordField').value = '';
+
+        // Funzione per filtrare la tabella in base alla ricerca
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const table = document.querySelector('.password-table');
             
-            // Reset del bottone mostra/nascondi
-            const showButton = document.querySelector('.show-password-btn');
-            showButton.textContent = '👁️ Mostra';
-            showButton.classList.remove('active');
+            if (!table) return;
+            
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            const noResults = document.getElementById('noResults');
+            
+            let found = false;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const titleCell = rows[i].getElementsByTagName('td')[0];
+                const titleText = titleCell.textContent || titleCell.innerText;
+                
+                if (titleText.toLowerCase().includes(searchTerm)) {
+                    rows[i].style.display = '';
+                    found = true;
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+            
+            if (!found && searchTerm !== '') {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
         }
-        
-        // Inizializza le password nella lista come nascoste
+
+        // Funzione per pulire la ricerca
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filterTable();
+        }
+
+        // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
+            // Inizializza le password nella tabella come nascoste
             const passwordDisplays = document.querySelectorAll('.password-display');
             passwordDisplays.forEach(display => {
-                display.style.webkitTextSecurity = 'disc';
-                display.style.textSecurity = 'disc';
-                display.style.fontFamily = 'Courier New, monospace';
+                const originalPassword = display.textContent;
+                display.setAttribute('data-password', originalPassword);
+                display.textContent = '•'.repeat(originalPassword.length);
             });
             
-            // Pulisci automaticamente il form dopo l'invio (backup)
-            const form = document.getElementById('passwordForm');
-            if (form) {
-                form.addEventListener('submit', function() {
-                    setTimeout(function() {
-                        clearForm();
-                    }, 100);
-                });
+            // Ricerca in tempo reale
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', filterTable);
             }
-        });
-        
-        // Aggiungi conferma prima di eliminare (doppia sicurezza)
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteLinks = document.querySelectorAll('.delete-btn');
-            deleteLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    if (!confirm('Sei sicuro di voler eliminare questa password? Questa azione non può essere annullata.')) {
-                        e.preventDefault();
-                    }
-                });
-            });
         });
     </script>
 </body>

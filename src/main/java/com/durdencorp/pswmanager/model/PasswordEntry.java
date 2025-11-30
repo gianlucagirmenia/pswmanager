@@ -67,6 +67,12 @@ public class PasswordEntry {
         this.category = category;
     }
     
+    public PasswordEntry(Long id, String title, String encryptedPassword) {
+        this.id = id;
+        this.title = title;
+        this.encryptedPassword = encryptedPassword;
+    }
+    
     // Getter e Setter
     public Long getId() {
         return id;
