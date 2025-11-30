@@ -1,6 +1,7 @@
 package com.durdencorp.pswmanager.rest;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.durdencorp.pswmanager.model.PasswordEntry;
@@ -21,7 +23,7 @@ public class WebController {
     @Autowired
     private PasswordEntryService passwordEntryService;
     
-    // Pagina principale con la lista
+ // Pagina principale con la lista
     @GetMapping("/")
     public String home(Model model) {
         try {
@@ -30,14 +32,53 @@ public class WebController {
             }
             
             List<PasswordEntry> passwords = passwordEntryService.findAll();
+            int totalCount = passwords != null ? passwords.size() : 0;
+            
             model.addAttribute("passwords", passwords != null ? passwords : new ArrayList<>());
+            model.addAttribute("totalCount", totalCount); // AGGIUNGI QUESTO
+            
+            // AGGIUNGI SEMPRE LE STATISTICHE DELLE CATEGORIE
+            model.addAttribute("categories", passwordEntryService.getAllCategories());
+            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
+            
             return "index";
             
         } catch (Exception e) {
-            // Se c'è un errore (es. master password non impostata), reindirizza al login
             model.addAttribute("passwords", new ArrayList<>());
+            model.addAttribute("totalCount", 0); // ANCHE IN CASO DI ERRORE
             model.addAttribute("errorMessage", "Errore nel caricamento: " + e.getMessage());
+            model.addAttribute("categories", new ArrayList<>());
+            model.addAttribute("categoryStats", new HashMap<>());
             return "index";
+        }
+    }
+    
+    // Filtra per categoria
+    @GetMapping("/category/{category}")
+    public String filterByCategory(@PathVariable String category, Model model) {
+        try {
+            List<PasswordEntry> passwords = passwordEntryService.findByCategory(category);
+            int filteredCount = passwords.size();
+            
+            model.addAttribute("passwords", passwords);
+            model.addAttribute("currentCategory", category);
+            model.addAttribute("filteredCount", filteredCount); // CONTEggio FILTRATO
+            model.addAttribute("categories", passwordEntryService.getAllCategories());
+            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
+            
+            // Calcola il totale generale per il badge "Tutte"
+            List<PasswordEntry> allPasswords = passwordEntryService.findAll();
+            model.addAttribute("totalCount", allPasswords.size());
+            
+            return "index";
+        } catch (SecurityException e) {
+            return "redirect:/login";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Errore nel filtro per categoria: " + e.getMessage());
+            model.addAttribute("categories", new ArrayList<>());
+            model.addAttribute("categoryStats", new HashMap<>());
+            model.addAttribute("totalCount", 0);
+            return home(model);
         }
     }
     
@@ -113,6 +154,39 @@ public class WebController {
             redirectAttributes.addFlashAttribute("errorMessage", "Errore nell'eliminazione: " + e.getMessage());
         }
         return "redirect:/";
+    }
+    
+    // Ricerca all'interno di una categoria
+    @GetMapping("/category/{category}/search")
+    public String searchInCategory(@PathVariable String category, 
+                                 @RequestParam String query, 
+                                 Model model) {
+        try {
+            List<PasswordEntry> passwords = passwordEntryService.findByCategoryAndSearch(category, query);
+            model.addAttribute("passwords", passwords);
+            model.addAttribute("currentCategory", category);
+            model.addAttribute("searchQuery", query);
+            model.addAttribute("categories", passwordEntryService.getAllCategories());
+            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
+            return "index";
+        } catch (SecurityException e) {
+            return "redirect:/login";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Errore nella ricerca: " + e.getMessage());
+            return home(model);
+        }
+    }
+    
+    // Mostra tutte le categorie
+    @GetMapping("/categories")
+    public String showCategories(Model model) {
+        try {
+            model.addAttribute("categories", passwordEntryService.getAllCategories());
+            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
+            return "categories";
+        } catch (SecurityException e) {
+            return "redirect:/login";
+        }
     }
     
 }

@@ -15,8 +15,6 @@ public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Lo
     
     List<PasswordEntry> findByUsername(String username);
     
-    List<PasswordEntry> findByCategory(String category);
-    
     @Query("SELECT p FROM PasswordEntry p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.username) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.notes) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<PasswordEntry> searchAllFields(@Param("query") String query);
     
@@ -26,4 +24,13 @@ public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Lo
     
     @Query("SELECT new com.durdencorp.pswmanager.model.PasswordEntry(p.id, p.title, p.encryptedPassword) FROM PasswordEntry p WHERE p.encryptedPassword IS NOT NULL")
     List<PasswordEntry> findAllEncrypted();
+    
+    List<PasswordEntry> findByCategory(String category);
+    List<PasswordEntry> findByCategoryOrderByTitleAsc(String category);
+    
+    @Query("SELECT DISTINCT p.category FROM PasswordEntry p WHERE p.category IS NOT NULL ORDER BY p.category")
+    List<String> findAllCategories();
+    
+    @Query("SELECT p FROM PasswordEntry p WHERE p.category = :category AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.username) LIKE LOWER(CONCAT('%', :query, '%')))")
+    List<PasswordEntry> findByCategoryAndSearchQuery(@Param("category") String category, @Param("query") String query);
 }

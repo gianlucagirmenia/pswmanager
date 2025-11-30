@@ -2,6 +2,7 @@ package com.durdencorp.pswmanager.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class PasswordEntryService {
     
     @Autowired
     private AppConfigService appConfigService;
+    
+    @Autowired
+    private CategoryService categoryService;
     
     public boolean setAndVerifyMasterPassword(String masterPassword) {
         return encryptionUtil.setAndVerifyMasterPassword(masterPassword);
@@ -185,6 +189,10 @@ public class PasswordEntryService {
         }).toList();
     }
     
+    public void clearSession() {
+        encryptionUtil.clear();
+    }
+    
     public List<PasswordEntry> findByCategory(String category) {
         if (!isMasterPasswordSet()) {
             throw new IllegalStateException("Master password non impostata");
@@ -193,15 +201,42 @@ public class PasswordEntryService {
         List<PasswordEntry> entries = repository.findByCategory(category);
         return entries.stream().map(entry -> {
             if (entry.getEncryptedPassword() != null && !entry.getEncryptedPassword().isEmpty()) {
-                String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
-                entry.setEncryptedPassword(decryptedPassword);
+                try {
+                    String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
+                    entry.setEncryptedPassword(decryptedPassword);
+                } catch (Exception e) {
+                    System.out.println("ERRORE decifratura per '" + entry.getTitle() + "': " + e.getMessage());
+                }
             }
             return entry;
         }).toList();
     }
     
-    public void clearSession() {
-        encryptionUtil.clear();
+    public List<String> getAllCategories() {
+        return categoryService.getAllCategories();
+    }
+    
+    public Map<String, Long> getCategoryStats() {
+        return categoryService.getCategoryStats();
+    }
+    
+    public List<PasswordEntry> findByCategoryAndSearch(String category, String query) {
+        if (!isMasterPasswordSet()) {
+            throw new IllegalStateException("Master password non impostata");
+        }
+        
+        List<PasswordEntry> entries = repository.findByCategoryAndSearchQuery(category, query);
+        return entries.stream().map(entry -> {
+            if (entry.getEncryptedPassword() != null && !entry.getEncryptedPassword().isEmpty()) {
+                try {
+                    String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
+                    entry.setEncryptedPassword(decryptedPassword);
+                } catch (Exception e) {
+                    System.out.println("ERRORE decifratura per '" + entry.getTitle() + "': " + e.getMessage());
+                }
+            }
+            return entry;
+        }).toList();
     }
     
 }
