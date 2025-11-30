@@ -27,22 +27,24 @@
             border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
         }
-        .success-message { 
-            background: #d4edda; 
-            color: #155724; 
-            padding: 12px; 
-            border-radius: 5px; 
-            margin-bottom: 20px;
-            border-left: 4px solid #28a745;
-        }
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
-        }
+		.success-message { 
+		    background: #d4edda; 
+		    color: #155724; 
+		    padding: 12px; 
+		    border-radius: 5px; 
+		    margin-bottom: 20px;
+		    border-left: 4px solid #28a745;
+		    transition: opacity 0.5s ease;
+		}
+		.error-message {
+		    background: #f8d7da;
+		    color: #721c24;
+		    padding: 12px;
+		    border-radius: 5px;
+		    margin-bottom: 20px;
+		    border-left: 4px solid #dc3545;
+		    transition: opacity 0.5s ease;
+		}
         button { 
             background: #3498db; 
             color: white; 
@@ -259,6 +261,22 @@
 		    font-size: 16px;
 		    margin: 8px 0;
 		}
+		
+		.tool-btn { 
+		    background: #17a2b8; 
+		    color: white; 
+		    border: none; 
+		    padding: 12px 20px; 
+		    cursor: pointer; 
+		    margin: 5px 5px 5px 0; 
+		    border-radius: 4px; 
+		    font-size: 14px;
+		    transition: background-color 0.2s;
+		}
+		.tool-btn:hover {
+		    background: #138496;
+		}
+		
     </style>
 </head>
 <body>
@@ -266,27 +284,28 @@
         <h1>🔐 Password Manager</h1>
         
         <!-- Messaggio di successo -->
-        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        <div th:if="${successMessage}" class="success-message" id="successMessage" th:text="${successMessage}"></div>
         
         <!-- Messaggio di errore -->
-        <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+        <div th:if="${errorMessage}" class="error-message" id="errorMessage" th:text="${errorMessage}"></div>
         
-        <!-- Barra superiore con pulsante nuovo e ricerca -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <a th:href="@{/new}" class="new-btn" style="text-decoration: none; color: white; display: inline-block;">➕ Inserisci Nuovo Elemento</a>
-			<a th:href="@{/logout}" class="clear-search-btn" style="text-decoration: none; color: white; display: inline-block;">🚪 Logout</a>
-            
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" 
-                       placeholder="🔍 Cerca per titolo...">
-                <button onclick="clearSearch()" class="clear-search-btn">Pulisci Ricerca</button>
-            </div>
-        </div>
-
-        <!-- Messaggio nessun risultato -->
-        <div id="noResults" class="no-results">
-            <p>Nessuna password trovata con questo titolo.</p>
-        </div>
+		<!-- Barra superiore con pulsante nuovo e ricerca -->
+		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+		    <div style="display: flex; gap: 10px; align-items: center;">  
+		        <!-- Bottone Sanitizzazione -->
+		        <form th:action="@{/admin/sanitize}" method="post" style="display: inline;">
+		            <button type="submit" class="tool-btn" 
+		                    onclick="return confirm('Sei sicuro di voler sanitizzare il database?\nQuesta operazione verificherà tutte le password e le ricifrerà se necessario.')"
+		                    style="background: #17a2b8; padding: 12px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 14px;">
+		                🛡️ Sanitizza Database
+		            </button>
+		        </form>
+		    </div>
+		    
+		    <div style="display: flex; gap: 10px; align-items: center;">
+		        <a th:href="@{/logout}" class="clear-search-btn" style="text-decoration: none; color: white; display: inline-block;">🚪 Logout</a>
+		    </div>
+		</div>
 
 		<!-- Filtri per Categoria -->
 		<div class="category-section" style="margin: 20px 0;" th:if="${not #maps.isEmpty(categoryStats) or currentCategory == null}">
@@ -341,7 +360,16 @@
         
 		<!-- Tabella password esistenti -->
 		<div class="password-list">
-		    <h3>📋 Le tue Password</h3>
+		    <h3>📋 Elenco delle password</h3>
+			<div class="search-container">
+			    <input type="text" id="searchInput" class="search-input" 
+			           placeholder="🔍 Cerca per titolo...">
+			    <button onclick="clearSearch()" class="clear-search-btn">Pulisci Ricerca</button>
+			</div>
+			<!-- Messaggio nessun risultato -->
+			<div id="noResults" class="no-results">
+			    <p>Nessuna password trovata con questo titolo.</p>
+			</div>
 		    
 		    <!-- Messaggio di errore aggiuntivo -->
 		    <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
@@ -360,8 +388,12 @@
 		            </p>
 		        </div>
 		    </div>
-		    
-		    <table th:if="${passwords != null and !passwords.empty}" class="password-table">
+			
+			<button type="button" class="new-btn" 
+			        onclick="window.location.href='/new'">
+			    ➕ Inserisci Nuovo Elemento
+			</button>
+		    <table th:if="${passwords != null and !passwords.empty}" class="password-table" id="passwordTable">
 		        <!-- Il resto della tabella rimane uguale -->
 		        <thead>
 		            <tr>
@@ -422,94 +454,148 @@
     </div>
 
     <script>
-        // Funzione per mostrare/nascondere la password nella tabella
-        function toggleDisplayPassword(button) {
-            const tableRow = button.closest('tr');
-            const passwordDisplay = tableRow.querySelector('.password-display');
-            const originalPassword = passwordDisplay.getAttribute('data-password');
-            
-            if (passwordDisplay.textContent === originalPassword) {
-                passwordDisplay.textContent = '•'.repeat(originalPassword.length);
-                button.textContent = '👁️';
-                button.title = 'Mostra password';
-            } else {
-                passwordDisplay.textContent = originalPassword;
-                button.textContent = '🙈';
-                button.title = 'Nascondi password';
-            }
-        }
+		// Funzione per mostrare/nascondere la password nella tabella
+		function toggleDisplayPassword(button) {
+		    const tableRow = button.closest('tr');
+		    const passwordDisplay = tableRow.querySelector('.password-display');
+		    const originalPassword = passwordDisplay.getAttribute('data-password');
+		    
+		    if (passwordDisplay.textContent === originalPassword) {
+		        passwordDisplay.textContent = '•'.repeat(originalPassword.length);
+		        button.textContent = '👁️';
+		        button.title = 'Mostra password';
+		    } else {
+		        passwordDisplay.textContent = originalPassword;
+		        button.textContent = '🙈';
+		        button.title = 'Nascondi password';
+		    }
+		}
 
-        // Funzione per copiare la password
-        function copyPassword(button, passwordText) {
-            navigator.clipboard.writeText(passwordText).then(function() {
-                const originalText = button.textContent;
-                button.textContent = '✅';
-                button.style.background = '#27ae60';
-                
-                setTimeout(function() {
-                    button.textContent = originalText;
-                    button.style.background = '';
-                }, 1500);
-                
-            }).catch(function(err) {
-                console.error('Errore nella copia: ', err);
-                alert('Errore nella copia della password. Controlla i permessi del browser.');
-            });
-        }
+		// Funzione per copiare la password
+		function copyPassword(button, passwordText) {
+		    navigator.clipboard.writeText(passwordText).then(function() {
+		        const originalText = button.textContent;
+		        button.textContent = '✅';
+		        button.style.background = '#27ae60';
+		        
+		        setTimeout(function() {
+		            button.textContent = originalText;
+		            button.style.background = '';
+		        }, 1500);
+		        
+		    }).catch(function(err) {
+		        console.error('Errore nella copia: ', err);
+		        alert('Errore nella copia della password. Controlla i permessi del browser.');
+		    });
+		}
 
-        // Funzione per filtrare la tabella in base alla ricerca
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const table = document.querySelector('.password-table');
-            
-            if (!table) return;
-            
-            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-            const noResults = document.getElementById('noResults');
-            
-            let found = false;
-            
-            for (let i = 0; i < rows.length; i++) {
-                const titleCell = rows[i].getElementsByTagName('td')[0];
-                const titleText = titleCell.textContent || titleCell.innerText;
-                
-                if (titleText.toLowerCase().includes(searchTerm)) {
-                    rows[i].style.display = '';
-                    found = true;
-                } else {
-                    rows[i].style.display = 'none';
-                }
-            }
-            
-            if (!found && searchTerm !== '') {
-                noResults.style.display = 'block';
-            } else {
-                noResults.style.display = 'none';
-            }
-        }
+		// Funzione per filtrare la tabella in base alla ricerca
+		function filterTable() {
+		    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+		    const table = document.getElementById('passwordTable');
+		    const noResults = document.getElementById('noResults');
+		    
+		    if (!table) return;
+		    
+		    const tbody = table.getElementsByTagName('tbody')[0];
+		    const rows = tbody.getElementsByTagName('tr');
+		    
+		    let found = false;
+		    
+		    for (let i = 0; i < rows.length; i++) {
+		        const titleCell = rows[i].getElementsByTagName('td')[0];
+		        const titleText = titleCell.textContent || titleCell.innerText;
+		        
+		        if (titleText.toLowerCase().includes(searchTerm)) {
+		            rows[i].style.display = '';
+		            found = true;
+		        } else {
+		            rows[i].style.display = 'none';
+		        }
+		    }
+		    
+		    if (!found && searchTerm !== '') {
+		        // Nascondi la tabella e mostra il messaggio "nessun risultato"
+		        table.style.display = 'none';
+		        noResults.style.display = 'block';
+		    } else {
+		        // Mostra la tabella e nascondi il messaggio
+		        table.style.display = '';
+		        noResults.style.display = 'none';
+		    }
+		}
 
-        // Funzione per pulire la ricerca
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            filterTable();
-        }
+		// Funzione per pulire la ricerca
+		function clearSearch() {
+		    document.getElementById('searchInput').value = '';
+		    const table = document.getElementById('passwordTable');
+		    const noResults = document.getElementById('noResults');
+		    
+		    if (table) {
+		        table.style.display = '';
+		    }
+		    if (noResults) {
+		        noResults.style.display = 'none';
+		    }
+		    
+		    // Ripristina tutte le righe
+		    const rows = document.querySelectorAll('#passwordTable tbody tr');
+		    rows.forEach(row => {
+		        row.style.display = '';
+		    });
+		}
 
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inizializza le password nella tabella come nascoste
-            const passwordDisplays = document.querySelectorAll('.password-display');
-            passwordDisplays.forEach(display => {
-                const originalPassword = display.textContent;
-                display.setAttribute('data-password', originalPassword);
-                display.textContent = '•'.repeat(originalPassword.length);
-            });
-            
-            // Ricerca in tempo reale
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', filterTable);
-            }
-        });
+		// Funzione per nascondere automaticamente i messaggi flash
+		function autoHideMessages() {
+		    const successMessage = document.getElementById('successMessage');
+		    const errorMessage = document.getElementById('errorMessage');
+		    
+		    if (successMessage) {
+		        setTimeout(() => {
+		            successMessage.style.opacity = '0';
+		            setTimeout(() => {
+		                successMessage.style.display = 'none';
+		            }, 500);
+		        }, 5000); // 5 secondi per i messaggi di successo
+		    }
+		    
+		    if (errorMessage) {
+		        setTimeout(() => {
+		            errorMessage.style.opacity = '0';
+		            setTimeout(() => {
+		                errorMessage.style.display = 'none';
+		            }, 500);
+		        }, 8000); // 8 secondi per i messaggi di errore
+		    }
+		}
+
+		// Inizializzazione
+		document.addEventListener('DOMContentLoaded', function() {
+		    // Nascondi automaticamente i messaggi flash
+		    autoHideMessages();
+		    
+		    // Inizializza le password nella tabella come nascoste
+		    const passwordDisplays = document.querySelectorAll('.password-display');
+		    passwordDisplays.forEach(display => {
+		        const originalPassword = display.textContent;
+		        display.setAttribute('data-password', originalPassword);
+		        display.textContent = '•'.repeat(originalPassword.length);
+		    });
+		    
+		    // Assicurati che la tabella sia visibile all'inizio
+		    const table = document.getElementById('passwordTable');
+		    const noResults = document.getElementById('noResults');
+		    if (table && noResults) {
+		        table.style.display = '';
+		        noResults.style.display = 'none';
+		    }
+		    
+		    // Ricerca in tempo reale
+		    const searchInput = document.getElementById('searchInput');
+		    if (searchInput) {
+		        searchInput.addEventListener('input', filterTable);
+		    }
+		});
     </script>
 </body>
 </html>

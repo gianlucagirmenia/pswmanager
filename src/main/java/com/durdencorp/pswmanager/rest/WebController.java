@@ -119,19 +119,20 @@ public class WebController {
         System.out.println("Master password impostata: " + passwordEntryService.isMasterPasswordSet());
         System.out.println("Titolo: " + passwordEntry.getTitle());
         System.out.println("Username: " + passwordEntry.getUsername());
-        System.out.println("Password: " + passwordEntry.getEncryptedPassword());
+        System.out.println("Password (IN CHIARO dal form): " + passwordEntry.getEncryptedPassword());
         System.out.println("URL: " + passwordEntry.getUrl());
         System.out.println("Note: " + passwordEntry.getNotes());
         
         try {
             PasswordEntry saved = passwordEntryService.save(passwordEntry);
             System.out.println("DOPO service.save() - ID: " + saved.getId());
+            System.out.println("Password nel record salvato: " + saved.getEncryptedPassword());
             
             redirectAttributes.addFlashAttribute("successMessage", 
                 passwordEntry.getId() == null ? "Password salvata con successo!" : "Password aggiornata con successo!");
                 
         } catch (Exception e) {
-            System.out.println("ERRORE nel salvataggio: " + e.getMessage());
+            System.out.println("ERRORE CRITICO nel salvataggio: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Errore: " + e.getMessage());
         }
@@ -187,6 +188,21 @@ public class WebController {
         } catch (SecurityException e) {
             return "redirect:/login";
         }
+    }
+    
+    @PostMapping("/admin/sanitize")
+    public String sanitizeDatabase(RedirectAttributes redirectAttributes) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return "redirect:/login";
+            }
+            
+            passwordEntryService.sanitizeAndReencryptAll();
+            redirectAttributes.addFlashAttribute("successMessage", "✅ Database sanitizzato con successo! Tutte le password sono state verificate e ricifrate se necessario.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "❌ Errore nella sanitizzazione: " + e.getMessage());
+        }
+        return "redirect:/";
     }
     
 }

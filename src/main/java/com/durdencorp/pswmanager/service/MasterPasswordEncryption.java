@@ -115,10 +115,10 @@ public class MasterPasswordEncryption {
                 throw new IllegalStateException("Master password non impostata");
             }
             
-            // VERIFICA SE È BASE64 VALIDO
+            // VERIFICA SE È BASE64 VALIDO - SE NON LO È, LANCIA ECCEZIONE
             if (!isValidBase64(encryptedData)) {
-                System.out.println("ATTENZIONE: Dati non in formato Base64 valido, restituisco in chiaro");
-                return encryptedData; // Restituisce i dati così come sono
+                System.out.println("ERRORE: Dati non in formato Base64 valido: " + encryptedData);
+                throw new IllegalArgumentException("Dati cifrati non validi - formato Base64 corrotto");
             }
             
             SecretKeySpec secretKey = sessionService.getCurrentKey();
@@ -131,8 +131,7 @@ public class MasterPasswordEncryption {
             
             // Verifica lunghezza minima
             if (combined.length < 16) {
-                System.out.println("ATTENZIONE: Dati cifrati troppo corti, restituisco in chiaro");
-                return encryptedData;
+                throw new IllegalArgumentException("Dati cifrati troppo corti per contenere IV");
             }
             
             byte[] iv = new byte[16];
@@ -151,12 +150,11 @@ public class MasterPasswordEncryption {
             return result;
             
         } catch (Exception e) {
-            System.out.println("ERRORE in decrypt: " + e.getMessage());
+            System.out.println("ERRORE CRITICO in decrypt: " + e.getMessage());
             System.out.println("Dati problematici: " + (encryptedData != null ? encryptedData : "null"));
             
-            // In caso di errore, restituisci i dati originali
-            System.out.println("ATTENZIONE: Restituisco dati in chiaro a causa di errore di decifratura");
-            return encryptedData;
+            // NON RESTITUIRE MAI DATI IN CHIARO - LANCIA ECCEZIONE
+            throw new RuntimeException("Errore irreversibile nella decifratura: " + e.getMessage(), e);
         }
     }
 

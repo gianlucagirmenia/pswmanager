@@ -49,48 +49,42 @@ public class PasswordEntryService {
             throw new IllegalStateException("Master password non impostata");
         }
         
-        // Salva una copia della password originale
         String originalPassword = entry.getEncryptedPassword();
         
-        // CIFRA la password prima di salvarla
-        if (originalPassword != null && !originalPassword.isEmpty()) {
-            try {
-                System.out.println("Prima di cifrare...");
-                String encryptedPassword = encryptionUtil.encrypt(originalPassword);
-                System.out.println("Password cifrata: " + encryptedPassword);
-                
-                // Crea una NUOVA entity per evitare problemi di caching
-                PasswordEntry entryToSave = new PasswordEntry();
-                entryToSave.setTitle(entry.getTitle());
-                entryToSave.setUsername(entry.getUsername());
-                entryToSave.setEncryptedPassword(encryptedPassword); // Usa la password cifrata
-                entryToSave.setUrl(entry.getUrl());
-                entryToSave.setNotes(entry.getNotes());
-                entryToSave.setCategory(entry.getCategory());
-                
-                if (entry.getId() != null) {
-                    entryToSave.setId(entry.getId());
-                }
-                
-                PasswordEntry saved = repository.save(entryToSave);
-                repository.flush(); // Forza il salvataggio immediato
-                
-                System.out.println("Record salvato nel DB con ID: " + saved.getId());
-                System.out.println("Password nel DB: " + saved.getEncryptedPassword());
-                System.out.println("=== SERVICE SAVE - FINE ===");
-                
-                return saved;
-                
-            } catch (Exception e) {
-                System.out.println("ERRORE durante la cifratura: " + e.getMessage());
-                e.printStackTrace();
-                throw e;
-            }
+        // Crea una NUOVA entity per evitare problemi di caching
+        PasswordEntry entryToSave = new PasswordEntry();
+        entryToSave.setTitle(entry.getTitle());
+        entryToSave.setUsername(entry.getUsername());
+        entryToSave.setUrl(entry.getUrl());
+        entryToSave.setNotes(entry.getNotes());
+        entryToSave.setCategory(entry.getCategory());
+        
+        if (entry.getId() != null) {
+            entryToSave.setId(entry.getId());
         }
         
-        // Se la password è nulla, salva normalmente
-        PasswordEntry saved = repository.save(entry);
+        // SEMPRE CIFRA la password (non fare verifiche rischiose)
+        if (originalPassword != null && !originalPassword.isEmpty()) {
+            try {
+                System.out.println("Cifrando la password prima del salvataggio...");
+                String encryptedPassword = encryptionUtil.encrypt(originalPassword);
+                entryToSave.setEncryptedPassword(encryptedPassword);
+                System.out.println("Password cifrata con successo");
+                
+            } catch (Exception e) {
+                System.out.println("ERRORE CRITICO durante la cifratura: " + e.getMessage());
+                throw new RuntimeException("Impossibile cifrare la password: " + e.getMessage(), e);
+            }
+        } else {
+            entryToSave.setEncryptedPassword(originalPassword);
+        }
+        
+        PasswordEntry saved = repository.save(entryToSave);
         repository.flush();
+        
+        System.out.println("Record salvato nel DB con ID: " + saved.getId());
+        System.out.println("=== SERVICE SAVE - FINE ===");
+        
         return saved;
     }
     
@@ -237,6 +231,41 @@ public class PasswordEntryService {
             }
             return entry;
         }).toList();
+    }
+    
+    @Transactional
+    public void sanitizeAndReencryptAll() {
+        System.out.println("=== SANITIZZAZIONE E RICIFRATURA DI TUTTI I RECORD ===");
+        
+        List<PasswordEntry> allEntries = repository.findAll();
+        int fixedCount = 0;
+        int alreadyEncryptedCount = 0;
+        
+        for (PasswordEntry entry : allEntries) {
+            String currentPassword = entry.getEncryptedPassword();
+            
+            if (currentPassword != null && !currentPassword.isEmpty()) {
+                try {
+                    // Verifica se è cifrata correttamente
+                    String testDecrypt = encryptionUtil.decrypt(currentPassword);
+                    // Se non lancia eccezione, è già cifrata correttamente
+                    alreadyEncryptedCount++;
+                    System.out.println("✓ " + entry.getTitle() + " - già cifrata correttamente");
+                    
+                } catch (Exception e) {
+                    // Se fallisce, la password è in chiaro - ricifrala
+                    System.out.println("✗ " + entry.getTitle() + " - password in chiaro, ricifro...");
+                    
+                    String encryptedPassword = encryptionUtil.encrypt(currentPassword);
+                    entry.setEncryptedPassword(encryptedPassword);
+                    repository.save(entry);
+                    fixedCount++;
+                }
+            }
+        }
+        
+        repository.flush();
+        System.out.println("Sanitizzazione completata: " + fixedCount + " record ricifrati, " + alreadyEncryptedCount + " già corretti");
     }
     
 }

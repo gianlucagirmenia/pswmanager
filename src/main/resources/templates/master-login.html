@@ -38,6 +38,7 @@
             border-radius: 5px; 
             margin-bottom: 20px;
             border-left: 4px solid #28a745;
+            transition: opacity 0.5s ease; /* Aggiungi transizione */
         }
         .error-message {
             background: #f8d7da;
@@ -46,6 +47,7 @@
             border-radius: 5px;
             margin-bottom: 20px;
             border-left: 4px solid #dc3545;
+            transition: opacity 0.5s ease; /* Aggiungi transizione */
         }
         input { 
             width: 100%; 
@@ -94,18 +96,18 @@
     <div class="login-container">
         <h1>🔐 Password Manager</h1>
         
-        <!-- Messaggio di successo -->
-        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        <!-- Messaggio di successo - AGGIUNGI ID -->
+        <div th:if="${successMessage}" class="success-message" id="successMessage" th:text="${successMessage}"></div>
         
-        <!-- Messaggio di errore -->
-        <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+        <!-- Messaggio di errore - AGGIUNGI ID -->
+        <div th:if="${errorMessage}" class="error-message" id="errorMessage" th:text="${errorMessage}"></div>
         
-		<div class="info-box">
-		    <h3>🔒 Accesso Sicuro</h3>
-		    <p><strong>Primo accesso?</strong> Inserisci una nuova Master Password che ricorderai.</p>
-		    <p><strong>Accesso successivo?</strong> Inserisci la stessa Master Password usata precedentemente.</p>
-		    <p><strong>Nota:</strong> Se inserisci una password diversa da quella originale, l'accesso sarà negato e non potrai vedere le password salvate.</p>
-		</div>
+        <div class="info-box">
+            <h3>🔒 Accesso Sicuro</h3>
+            <p><strong>Primo accesso?</strong> Inserisci una nuova Master Password che ricorderai.</p>
+            <p><strong>Accesso successivo?</strong> Inserisci la stessa Master Password usata precedentemente.</p>
+            <p><strong>Nota:</strong> Se inserisci una password diversa da quella originale, l'accesso sarà negato e non potrai vedere le password salvate.</p>
+        </div>
         
         <form th:action="@{/login}" method="post">
             <input type="password" name="masterPassword" 
@@ -118,5 +120,42 @@
             <p><strong>Primo accesso?</strong> Inserisci una nuova Master Password che ricorderai.</p>
         </div>
     </div>
+
+    <script>
+        // Nascondi automaticamente i messaggi dopo 5 secondi
+        document.addEventListener('DOMContentLoaded', function() {
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            console.log('Script caricato - Messaggi trovati:', {
+                success: !!successMessage,
+                error: !!errorMessage
+            });
+            
+            if (successMessage) {
+                console.log('Nasconderò il messaggio di successo in 5 secondi');
+                setTimeout(() => {
+                    console.log('Nascondo messaggio di successo');
+                    successMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                        console.log('Messaggio di successo nascosto');
+                    }, 500);
+                }, 5000);
+            }
+            
+            if (errorMessage) {
+                console.log('Nasconderò il messaggio di errore in 8 secondi');
+                setTimeout(() => {
+                    console.log('Nascondo messaggio di errore');
+                    errorMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                        console.log('Messaggio di errore nascosto');
+                    }, 500);
+                }, 8000);
+            }
+        });
+    </script>
 </body>
 </html>
