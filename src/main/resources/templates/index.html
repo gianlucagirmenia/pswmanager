@@ -81,15 +81,15 @@
             padding: 8px 12px;
             font-size: 12px;
         }
-        .show-password-btn:hover {
-            background: #7f8c8d;
-        }
-        .copy-btn { 
-            background: #27ae60; 
-            margin-left: 5px;
-            padding: 8px 12px;
-            font-size: 12px;
-        }
+		.show-password-btn, .copy-btn {
+		    padding: 6px 10px;
+		    font-size: 12px;
+		    min-width: 36px;
+		    height: 32px;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		}
         .copy-btn:hover {
             background: #219653;
         }
@@ -125,19 +125,28 @@
         .password-table tr:last-child td {
             border-bottom: none;
         }
-        .password-display {
-            font-family: 'Courier New', monospace;
-            background: #f8f9fa;
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: 1px dashed #ccc;
-            display: inline-block;
-            min-width: 150px;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
+		.password-display {
+		    font-family: 'Courier New', monospace;
+		    background: #f8f9fa;
+		    padding: 6px 10px;
+		    border-radius: 4px;
+		    border: 1px dashed #ccc;
+		    min-width: 150px;
+		    max-width: 200px;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    white-space: nowrap;
+		    display: inline-block;
+		    vertical-align: middle;
+		    margin-right: 5px;
+		}
+		.action-buttons {
+		    display: flex;
+		    gap: 5px;
+		    flex-wrap: nowrap;
+		    justify-content: center;
+		    min-width: 80px;
+		}
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -277,6 +286,152 @@
 		    background: #138496;
 		}
 		
+		/* Aggiungi nella sezione CSS esistente */
+
+		.password-table {
+		    table-layout: fixed; /* Importante: layout fisso */
+		    width: 100%;
+		}
+
+		/* Definisci larghezze specifiche per ogni colonna */
+		.password-table th:nth-child(1), /* Titolo */
+		.password-table td:nth-child(1) {
+		    width: 15%;
+		    max-width: 200px;
+		}
+
+		.password-table th:nth-child(2), /* Username */
+		.password-table td:nth-child(2) {
+		    width: 15%;
+		    max-width: 200px;
+		}
+
+		.password-table th:nth-child(3), /* Password */
+		.password-table td:nth-child(3) {
+		    width: 25%;
+		    max-width: 300px;
+		}
+
+		.password-table th:nth-child(4), /* URL */
+		.password-table td:nth-child(4) {
+		    width: 15%;
+		    max-width: 200px;
+		}
+
+		.password-table th:nth-child(5), /* Note */
+		.password-table td:nth-child(5) {
+		    width: 15%;
+		    max-width: 200px;
+		}
+
+		.password-table th:nth-child(6), /* Data Creazione */
+		.password-table td:nth-child(6) {
+		    width: 10%;
+		    max-width: 150px;
+		}
+
+		.password-table th:nth-child(7), /* Azioni */
+		.password-table td:nth-child(7) {
+		    width: 10%;
+		    min-width: 120px; /* Larghezza minima per i bottoni */
+		    text-align: center;
+		}
+
+		/* Stili specifici per le celle password */
+		.password-cell {
+		    position: relative;
+		    overflow: hidden;
+		}
+
+		.password-display {
+		    font-family: 'Courier New', monospace;
+		    background: #f8f9fa;
+		    padding: 5px 10px;
+		    border-radius: 4px;
+		    border: 1px dashed #ccc;
+		    display: inline-block;
+		    max-width: 200px; /* Limita la larghezza massima */
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    white-space: nowrap;
+		    vertical-align: middle;
+		}
+
+		/* Mostra password completa al hover */
+		.password-display:hover {
+		    position: relative;
+		    z-index: 1000;
+		    max-width: none;
+		    white-space: normal;
+		    word-break: break-all;
+		    background: #fff;
+		    border: 1px solid #3498db;
+		    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+		}
+
+		/* Stile per le note con più righe */
+		.notes-cell {
+		    max-width: 200px;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    white-space: nowrap;
+		    display: block;
+		}
+
+		.notes-cell:hover {
+		    white-space: normal;
+		    overflow: visible;
+		    position: relative;
+		    z-index: 1000;
+		    background: white;
+		    border: 1px solid #ddd;
+		    padding: 5px;
+		    border-radius: 4px;
+		    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+		}
+
+		/* Assicurati che i bottoni rimangano visibili */
+		.action-buttons {
+		    display: flex;
+		    gap: 5px;
+		    flex-wrap: nowrap;
+		    justify-content: center;
+		    min-width: 120px;
+		}
+
+		/* Stile per URL lunghi */
+		.url-cell a {
+		    display: block;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		    white-space: nowrap;
+		    max-width: 100%;
+		}
+
+		.url-cell a:hover {
+		    overflow: visible;
+		    white-space: normal;
+		    position: relative;
+		    z-index: 1000;
+		    background: white;
+		    padding: 2px 5px;
+		    border-radius: 3px;
+		    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+		}
+		
+		.password-display.expanded {
+		    position: relative;
+		    z-index: 1000;
+		    max-width: none !important;
+		    white-space: normal !important;
+		    word-break: break-all !important;
+		    background: #fff !important;
+		    border: 1px solid #3498db !important;
+		    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+		    padding: 10px !important;
+		    margin: -5px !important;
+		}
+		
     </style>
 </head>
 <body>
@@ -401,8 +556,6 @@
 		                <th>Username</th>
 		                <th>Password</th>
 		                <th>URL</th>
-		                <th>Note</th>
-		                <th>Data Creazione</th>
 		                <th>Azioni</th>
 		            </tr>
 		        </thead>
@@ -410,39 +563,41 @@
 		            <tr th:each="password : ${passwords}">
 		                <td th:text="${password.title}"></td>
 		                <td th:text="${password.username}"></td>
-		                <td>
-		                    <span class="password-display" 
-		                          th:text="${password.encryptedPassword}"
-		                          th:attr="data-real-password=${password.encryptedPassword}"></span>
-		                    <div class="action-buttons">
-		                        <button type="button" class="show-password-btn" 
-		                                onclick="toggleDisplayPassword(this)">
-		                            👁️
-		                        </button>
-		                        <button type="button" class="copy-btn" 
-		                                onclick="copyPassword(this, '[[${password.encryptedPassword}]]')">
-		                            📋
-		                        </button>
-		                    </div>
-		                </td>
+						<td class="password-cell">
+						    <span class="password-display" 
+						          th:text="${password.decryptedPassword}"
+						          th:attr="data-password=${password.decryptedPassword}"
+						          title="Password"
+						          style="display: inline-block; min-width: 150px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+						    </span>
+						    <div class="action-buttons">
+						        <button type="button" class="show-password-btn" 
+						                onclick="toggleDisplayPassword(this)"
+						                title="Mostra/Nascondi password">
+						            👁️
+						        </button>
+						        <button type="button" class="copy-btn" 
+						                onclick="copyPassword(this, '[[${password.decryptedPassword}]]')"
+						                title="Copia password">
+						            📋
+						        </button>
+						    </div>
+						</td>
 		                <td class="url-cell">
-		                    <a th:if="${password.url}" th:href="${password.url}" th:text="${password.url}" target="_blank"></a>
+		                    <a th:if="${password.url}" th:href="${password.url}" th:text="${password.url}" target="_blank" title="Apri URL"></a>
 		                    <span th:unless="${password.url}">-</span>
 		                </td>
-		                <td class="notes-cell" th:title="${password.notes}">
-		                    <span th:if="${password.notes}" th:text="${password.notes}"></span>
-		                    <span th:unless="${password.notes}">-</span>
-		                </td>
-		                <td th:text="${#temporals.format(password.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
 		                <td>
 		                    <div class="action-buttons">
 		                        <a th:href="@{/edit/{id}(id=${password.id})}" class="edit-btn" 
-		                           style="text-decoration: none; color: white; display: inline-block;">
+		                           style="text-decoration: none; color: white; display: inline-block;"
+								   title="Clicca per accedere ai dettagli da modificare">
 		                            ✏️ Modifica
 		                        </a>
 		                        <a th:href="@{/delete/{id}(id=${password.id})}" class="delete-btn" 
 		                           onclick="return confirm('Sei sicuro di voler eliminare questa password?')"
-		                           style="text-decoration: none; color: white; display: inline-block;">
+		                           style="text-decoration: none; color: white; display: inline-block;"
+								   title="Elimina l'elemento">
 		                            🗑️ Elimina
 		                        </a>
 		                    </div>
@@ -459,13 +614,26 @@
 		    const tableRow = button.closest('tr');
 		    const passwordDisplay = tableRow.querySelector('.password-display');
 		    const originalPassword = passwordDisplay.getAttribute('data-password');
+		    const currentText = passwordDisplay.textContent;
 		    
-		    if (passwordDisplay.textContent === originalPassword) {
-		        passwordDisplay.textContent = '•'.repeat(originalPassword.length);
+		    // Se il testo attuale è la password originale (o una parte di essa), nascondila
+		    if (currentText === originalPassword || 
+		        currentText === originalPassword.substring(0, 20) + '...') {
+		        // Nascondi con asterischi
+		        const displayLength = Math.min(originalPassword.length, 20);
+		        passwordDisplay.textContent = '•'.repeat(displayLength);
+		        if (originalPassword.length > 20) {
+		            passwordDisplay.textContent += '...';
+		        }
 		        button.textContent = '👁️';
 		        button.title = 'Mostra password';
 		    } else {
-		        passwordDisplay.textContent = originalPassword;
+		        // Mostra la password originale (troncata se troppo lunga)
+		        if (originalPassword.length > 20) {
+		            passwordDisplay.textContent = originalPassword.substring(0, 20) + '...';
+		        } else {
+		            passwordDisplay.textContent = originalPassword;
+		        }
 		        button.textContent = '🙈';
 		        button.title = 'Nascondi password';
 		    }
@@ -475,12 +643,17 @@
 		function copyPassword(button, passwordText) {
 		    navigator.clipboard.writeText(passwordText).then(function() {
 		        const originalText = button.textContent;
+		        const originalTitle = button.title;
+		        const originalBackground = button.style.background;
+		        
 		        button.textContent = '✅';
+		        button.title = 'Copiato!';
 		        button.style.background = '#27ae60';
 		        
 		        setTimeout(function() {
 		            button.textContent = originalText;
-		            button.style.background = '';
+		            button.title = originalTitle;
+		            button.style.background = originalBackground;
 		        }, 1500);
 		        
 		    }).catch(function(err) {
@@ -569,17 +742,19 @@
 		    }
 		}
 
-		// Inizializzazione
+		// All'inizializzazione, imposta le password come nascoste
 		document.addEventListener('DOMContentLoaded', function() {
-		    // Nascondi automaticamente i messaggi flash
-		    autoHideMessages();
-		    
-		    // Inizializza le password nella tabella come nascoste
 		    const passwordDisplays = document.querySelectorAll('.password-display');
 		    passwordDisplays.forEach(display => {
 		        const originalPassword = display.textContent;
 		        display.setAttribute('data-password', originalPassword);
-		        display.textContent = '•'.repeat(originalPassword.length);
+		        
+		        // Nascondi inizialmente con asterischi
+		        const displayLength = Math.min(originalPassword.length, 20);
+		        display.textContent = '•'.repeat(displayLength);
+		        if (originalPassword.length > 20) {
+		            display.textContent += '...';
+		        }
 		    });
 		    
 		    // Assicurati che la tabella sia visibile all'inizio
@@ -595,6 +770,9 @@
 		    if (searchInput) {
 		        searchInput.addEventListener('input', filterTable);
 		    }
+		    
+		    // Nascondi automaticamente i messaggi flash
+		    autoHideMessages();
 		});
     </script>
 </body>

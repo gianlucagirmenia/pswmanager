@@ -1,9 +1,9 @@
 package com.durdencorp.pswmanager.rest;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.durdencorp.pswmanager.model.PasswordEntry;
+import com.durdencorp.pswmanager.dto.PasswordEntryDTO;
+import com.durdencorp.pswmanager.dto.PasswordEntryForm;
 import com.durdencorp.pswmanager.service.PasswordEntryService;
 
 @RestController
@@ -25,90 +26,140 @@ public class PasswordEntryController {
     @Autowired
     private PasswordEntryService passwordEntryService;
     
-    // GET tutte le password
+    // GET tutte le password - RESTITUISCE DTO
     @GetMapping
-    public List<PasswordEntry> getAllPasswords() {
-        return passwordEntryService.findAll();
+    public ResponseEntity<List<PasswordEntryDTO>> getAllPasswords() {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            List<PasswordEntryDTO> passwords = passwordEntryService.findAll();
+            return ResponseEntity.ok(passwords);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
-    // GET password by ID
+    // GET password by ID - RESTITUISCE DTO
     @GetMapping("/{id}")
-    public ResponseEntity<PasswordEntry> getPasswordById(@PathVariable Long id) {
-        Optional<PasswordEntry> entry = passwordEntryService.findById(id);
-        return entry.map(ResponseEntity::ok)
-                   .orElse(ResponseEntity.notFound().build());
-    }
-    
-    // CREATE nuova password
-    @PostMapping
-    public PasswordEntry createPassword(@RequestBody PasswordEntry entry) {
-        return passwordEntryService.save(entry);
-    }
-    
-    // UPDATE password esistente
-    @PutMapping("/{id}")
-    public ResponseEntity<PasswordEntry> updatePassword(@PathVariable Long id, @RequestBody PasswordEntry entryDetails) {
-        Optional<PasswordEntry> optionalEntry = passwordEntryService.findById(id);
-        
-        if (optionalEntry.isPresent()) {
-            PasswordEntry entry = optionalEntry.get();
-            entry.setTitle(entryDetails.getTitle());
-            entry.setUsername(entryDetails.getUsername());
-            entry.setEncryptedPassword(entryDetails.getEncryptedPassword());
-            entry.setUrl(entryDetails.getUrl());
-            entry.setNotes(entryDetails.getNotes());
-            entry.setCategory(entryDetails.getCategory());
+    public ResponseEntity<PasswordEntryDTO> getPasswordById(@PathVariable Long id) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
             
-            return ResponseEntity.ok(passwordEntryService.save(entry));
-        } else {
+            // Usa il metodo che restituisce DTO
+            List<PasswordEntryDTO> allPasswords = passwordEntryService.findAll();
+            PasswordEntryDTO password = allPasswords.stream()
+                .filter(p -> p.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+                
+            if (password != null) {
+                return ResponseEntity.ok(password);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // CREATE nuova password - USA FORM
+    @PostMapping
+    public ResponseEntity<Long> createPassword(@RequestBody PasswordEntryForm form) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            Long savedId = passwordEntryService.save(form);
+            return ResponseEntity.ok(savedId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // UPDATE password esistente - USA FORM
+    @PutMapping("/{id}")
+    public ResponseEntity<Long> updatePassword(@PathVariable Long id, @RequestBody PasswordEntryForm form) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            // Assicurati che l'ID nel form corrisponda al path
+            form.setId(id);
+            Long updatedId = passwordEntryService.save(form);
+            return ResponseEntity.ok(updatedId);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
     // DELETE password
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePassword(@PathVariable Long id) {
-        if (passwordEntryService.findById(id).isPresent()) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
             passwordEntryService.deleteById(id);
             return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
-    // SEARCH per titolo
+    // SEARCH per titolo - RESTITUISCE DTO
     @GetMapping("/search")
-    public List<PasswordEntry> searchByTitle(@RequestParam String title) {
-        return passwordEntryService.searchByTitle(title);
+    public ResponseEntity<List<PasswordEntryDTO>> searchByTitle(@RequestParam String title) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            List<PasswordEntryDTO> results = passwordEntryService.searchByTitle(title);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
-    /*
-    // SEARCH in tutti i campi
-    @GetMapping("/search/all")
-    public List<PasswordEntry> searchAllFields(@RequestParam String query) {
-        return passwordEntryService.searchAllFields(query);
-    }
-    */
-    
-    // GET per categoria
+    // GET per categoria - RESTITUISCE DTO
     @GetMapping("/category/{category}")
-    public List<PasswordEntry> getByCategory(@PathVariable String category) {
-        return passwordEntryService.findByCategory(category);
+    public ResponseEntity<List<PasswordEntryDTO>> getByCategory(@PathVariable String category) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            List<PasswordEntryDTO> results = passwordEntryService.findByCategory(category);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
-    /*
-    // GET ordinate per titolo
-    @GetMapping("/sorted/title")
-    public List<PasswordEntry> getAllSortedByTitle() {
-        return passwordEntryService.findAllByOrderByTitleAsc();
+    // SEARCH per categoria e query - RESTITUISCE DTO
+    @GetMapping("/category/{category}/search")
+    public ResponseEntity<List<PasswordEntryDTO>> searchInCategory(
+            @PathVariable String category, 
+            @RequestParam String query) {
+        try {
+            if (!passwordEntryService.isMasterPasswordSet()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            List<PasswordEntryDTO> results = passwordEntryService.findByCategoryAndSearch(category, query);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-    */
-    
-    /*
-    // GET ordinate per data
-    @GetMapping("/sorted/date")
-    public List<PasswordEntry> getAllSortedByDate() {
-        return passwordEntryService.findAllByOrderByCreatedAtDesc();
-    }
-    */
 }

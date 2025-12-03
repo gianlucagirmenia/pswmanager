@@ -1,14 +1,16 @@
 package com.durdencorp.pswmanager.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.durdencorp.pswmanager.dto.PasswordEntryDTO;
+import com.durdencorp.pswmanager.dto.PasswordEntryForm;
 import com.durdencorp.pswmanager.model.PasswordEntry;
 import com.durdencorp.pswmanager.repository.PasswordEntryRepository;
 
@@ -40,116 +42,93 @@ public class PasswordEntryService {
         return encryptionUtil.isMasterPasswordSet();
     }
     
-    public PasswordEntry save(PasswordEntry entry) {
-        System.out.println("=== SERVICE SAVE - INIZIO ===");
-        System.out.println("Master password impostata: " + isMasterPasswordSet());
-        System.out.println("Password originale: " + entry.getEncryptedPassword());
+    public Long save(PasswordEntryForm form) {
+        PasswordEntry entity;
         
-        if (!isMasterPasswordSet()) {
-            throw new IllegalStateException("Master password non impostata");
-        }
-        
-        String originalPassword = entry.getEncryptedPassword();
-        
-        // Crea una NUOVA entity per evitare problemi di caching
-        PasswordEntry entryToSave = new PasswordEntry();
-        entryToSave.setTitle(entry.getTitle());
-        entryToSave.setUsername(entry.getUsername());
-        entryToSave.setUrl(entry.getUrl());
-        entryToSave.setNotes(entry.getNotes());
-        entryToSave.setCategory(entry.getCategory());
-        
-        if (entry.getId() != null) {
-            entryToSave.setId(entry.getId());
-        }
-        
-        // SEMPRE CIFRA la password (non fare verifiche rischiose)
-        if (originalPassword != null && !originalPassword.isEmpty()) {
-            try {
-                System.out.println("Cifrando la password prima del salvataggio...");
-                String encryptedPassword = encryptionUtil.encrypt(originalPassword);
-                entryToSave.setEncryptedPassword(encryptedPassword);
-                System.out.println("Password cifrata con successo");
-                
-            } catch (Exception e) {
-                System.out.println("ERRORE CRITICO durante la cifratura: " + e.getMessage());
-                throw new RuntimeException("Impossibile cifrare la password: " + e.getMessage(), e);
-            }
+        if (form.getId() != null) {
+            // MODIFICA: carica l'entity esistente
+            entity = repository.findById(form.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Record non trovato"));
         } else {
-            entryToSave.setEncryptedPassword(originalPassword);
+            // NUOVO: crea nuova entity
+            entity = new PasswordEntry();
         }
         
-        PasswordEntry saved = repository.save(entryToSave);
-        repository.flush();
+        // Aggiorna campi base
+        entity.setTitle(form.getTitle());
+        entity.setUsername(form.getUsername());
+        entity.setUrl(form.getUrl());
+        entity.setNotes(form.getNotes());
+        entity.setCategory(form.getCategory());
         
-        System.out.println("Record salvato nel DB con ID: " + saved.getId());
-        System.out.println("=== SERVICE SAVE - FINE ===");
-        
-        return saved;
-    }
-    
-    public Optional<PasswordEntry> findById(Long id) {
-        if (!isMasterPasswordSet()) {
-            throw new IllegalStateException("Master password non impostata");
+        // CIFRA la password dal form (sempre in chiaro qui)
+        if (form.getPlainPassword() != null && !form.getPlainPassword().isEmpty()) {
+            String encrypted = encryptionUtil.encrypt(form.getPlainPassword());
+            entity.setEncryptedPassword(encrypted);
+        } else if (form.getId() == null) {
+            // Nuovo record senza password: errore
+            throw new IllegalArgumentException("La password è obbligatoria per nuovi record");
         }
+        // Se è modifica e password vuota, mantieni quella esistente
         
-        Optional<PasswordEntry> entry = repository.findById(id);
-        if (entry.isPresent()) {
-            // Decifra la password quando leggi
-            PasswordEntry decryptedEntry = entry.get();
-            if (decryptedEntry.getEncryptedPassword() != null && !decryptedEntry.getEncryptedPassword().isEmpty()) {
-                String decryptedPassword = encryptionUtil.decrypt(decryptedEntry.getEncryptedPassword());
-                decryptedEntry.setEncryptedPassword(decryptedPassword);
-            }
-            return Optional.of(decryptedEntry);
-        }
-        return entry;
+        PasswordEntry saved = repository.save(entity);
+        return saved.getId();
     }
     
     @Transactional(readOnly = true)
-    public List<PasswordEntry> findAll() {
-        System.out.println("=== SERVICE FIND ALL (READ ONLY) ===");
+    public List<PasswordEntryDTO> findAll() {
+        List<PasswordEntry> entities = repository.findAll();
+        return entities.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
+    
+    private PasswordEntryDTO convertToDTO(PasswordEntry entity) {
+        PasswordEntryDTO dto = new PasswordEntryDTO();
+        dto.setId(entity.getId());
+        dto.setTitle(entity.getTitle());
+        dto.setUsername(entity.getUsername());
+        dto.setUrl(entity.getUrl());
+        dto.setNotes(entity.getNotes());
+        dto.setCategory(entity.getCategory());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
         
-        if (!isMasterPasswordSet()) {
-            throw new IllegalStateException("Master password non impostata");
+        // Decifra SOLO per il DTO
+        try {
+            String decrypted = encryptionUtil.decrypt(entity.getEncryptedPassword());
+            dto.setDecryptedPassword(decrypted);
+        } catch (Exception e) {
+            dto.setDecryptedPassword("[ERRORE DECIFRATURA]");
         }
         
-        List<PasswordEntry> entries = repository.findAll();
-        System.out.println("Record trovati nel DB: " + entries.size());
+        return dto;
+    }
+    
+    // Metodo per trovare by ID (per modifica)
+    @Transactional(readOnly = true)
+    public PasswordEntryForm findByIdForEdit(Long id) {
+        PasswordEntry entity = repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Record non trovato"));
         
-        // Crea una lista per le entity di visualizzazione
-        List<PasswordEntry> viewEntries = new ArrayList<>();
+        PasswordEntryForm form = new PasswordEntryForm();
+        form.setId(entity.getId());
+        form.setTitle(entity.getTitle());
+        form.setUsername(entity.getUsername());
+        form.setUrl(entity.getUrl());
+        form.setNotes(entity.getNotes());
+        form.setCategory(entity.getCategory());
         
-        for (PasswordEntry original : entries) {
-            // Crea una copia per la visualizzazione
-            PasswordEntry viewEntry = new PasswordEntry();
-            viewEntry.setId(original.getId());
-            viewEntry.setTitle(original.getTitle());
-            viewEntry.setUsername(original.getUsername());
-            viewEntry.setUrl(original.getUrl());
-            viewEntry.setNotes(original.getNotes());
-            viewEntry.setCreatedAt(original.getCreatedAt());
-            viewEntry.setUpdatedAt(original.getUpdatedAt());
-            viewEntry.setCategory(original.getCategory());
-            
-            // Decifra la password SOLO per la visualizzazione
-            if (original.getEncryptedPassword() != null && !original.getEncryptedPassword().isEmpty()) {
-                try {
-                    String decryptedPassword = encryptionUtil.decrypt(original.getEncryptedPassword());
-                    viewEntry.setEncryptedPassword(decryptedPassword);
-                    System.out.println("Password decifrata per visualizzazione: " + original.getTitle());
-                } catch (Exception e) {
-                    System.out.println("ERRORE decifratura per '" + original.getTitle() + "': " + e.getMessage());
-                    viewEntry.setEncryptedPassword("*** ERRORE ***");
-                }
-            } else {
-                viewEntry.setEncryptedPassword(original.getEncryptedPassword());
-            }
-            
-            viewEntries.add(viewEntry);
+        // Decifra per il form di modifica
+        try {
+            String decrypted = encryptionUtil.decrypt(entity.getEncryptedPassword());
+            form.setPlainPassword(decrypted);
+        } catch (Exception e) {
+            form.setPlainPassword("");
+            System.out.println("ERRORE decifratura per ID " + id + ": " + e.getMessage());
         }
         
-        return viewEntries;
+        return form;
     }
     
     public String testEncryption(String data) {
@@ -161,49 +140,35 @@ public class PasswordEntryService {
     }
     
     public void deleteById(Long id) {
-        if (!isMasterPasswordSet()) {
-            throw new IllegalStateException("Master password non impostata");
-        }
         repository.deleteById(id);
     }
     
-    // Altri metodi (search, findByCategory, etc.) devono essere modificati similmente
-    public List<PasswordEntry> searchByTitle(String title) {
+    @Transactional(readOnly = true)
+    public List<PasswordEntryDTO> searchByTitle(String title) {
         if (!isMasterPasswordSet()) {
             throw new IllegalStateException("Master password non impostata");
         }
         
         List<PasswordEntry> entries = repository.findByTitleContainingIgnoreCase(title);
-        return entries.stream().map(entry -> {
-            if (entry.getEncryptedPassword() != null && !entry.getEncryptedPassword().isEmpty()) {
-                String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
-                entry.setEncryptedPassword(decryptedPassword);
-            }
-            return entry;
-        }).toList();
+        return entries.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
     
     public void clearSession() {
         encryptionUtil.clear();
     }
     
-    public List<PasswordEntry> findByCategory(String category) {
+    @Transactional(readOnly = true)
+    public List<PasswordEntryDTO> findByCategory(String category) {
         if (!isMasterPasswordSet()) {
             throw new IllegalStateException("Master password non impostata");
         }
         
         List<PasswordEntry> entries = repository.findByCategory(category);
-        return entries.stream().map(entry -> {
-            if (entry.getEncryptedPassword() != null && !entry.getEncryptedPassword().isEmpty()) {
-                try {
-                    String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
-                    entry.setEncryptedPassword(decryptedPassword);
-                } catch (Exception e) {
-                    System.out.println("ERRORE decifratura per '" + entry.getTitle() + "': " + e.getMessage());
-                }
-            }
-            return entry;
-        }).toList();
+        return entries.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
     
     public List<String> getAllCategories() {
@@ -214,23 +179,16 @@ public class PasswordEntryService {
         return categoryService.getCategoryStats();
     }
     
-    public List<PasswordEntry> findByCategoryAndSearch(String category, String query) {
+    @Transactional(readOnly = true)
+    public List<PasswordEntryDTO> findByCategoryAndSearch(String category, String query) {
         if (!isMasterPasswordSet()) {
             throw new IllegalStateException("Master password non impostata");
         }
         
         List<PasswordEntry> entries = repository.findByCategoryAndSearchQuery(category, query);
-        return entries.stream().map(entry -> {
-            if (entry.getEncryptedPassword() != null && !entry.getEncryptedPassword().isEmpty()) {
-                try {
-                    String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
-                    entry.setEncryptedPassword(decryptedPassword);
-                } catch (Exception e) {
-                    System.out.println("ERRORE decifratura per '" + entry.getTitle() + "': " + e.getMessage());
-                }
-            }
-            return entry;
-        }).toList();
+        return entries.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
     
     @Transactional

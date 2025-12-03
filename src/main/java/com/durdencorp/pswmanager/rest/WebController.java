@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.durdencorp.pswmanager.dto.PasswordEntryDTO;
+import com.durdencorp.pswmanager.dto.PasswordEntryForm;
 import com.durdencorp.pswmanager.model.PasswordEntry;
 import com.durdencorp.pswmanager.service.PasswordEntryService;
 
@@ -23,7 +25,6 @@ public class WebController {
     @Autowired
     private PasswordEntryService passwordEntryService;
     
- // Pagina principale con la lista
     @GetMapping("/")
     public String home(Model model) {
         try {
@@ -31,13 +32,12 @@ public class WebController {
                 return "redirect:/login";
             }
             
-            List<PasswordEntry> passwords = passwordEntryService.findAll();
+            List<PasswordEntryDTO> passwords = passwordEntryService.findAll();
             int totalCount = passwords != null ? passwords.size() : 0;
             
             model.addAttribute("passwords", passwords != null ? passwords : new ArrayList<>());
-            model.addAttribute("totalCount", totalCount); // AGGIUNGI QUESTO
+            model.addAttribute("totalCount", totalCount);
             
-            // AGGIUNGI SEMPRE LE STATISTICHE DELLE CATEGORIE
             model.addAttribute("categories", passwordEntryService.getAllCategories());
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
             
@@ -45,7 +45,7 @@ public class WebController {
             
         } catch (Exception e) {
             model.addAttribute("passwords", new ArrayList<>());
-            model.addAttribute("totalCount", 0); // ANCHE IN CASO DI ERRORE
+            model.addAttribute("totalCount", 0);
             model.addAttribute("errorMessage", "Errore nel caricamento: " + e.getMessage());
             model.addAttribute("categories", new ArrayList<>());
             model.addAttribute("categoryStats", new HashMap<>());
@@ -57,7 +57,7 @@ public class WebController {
     @GetMapping("/category/{category}")
     public String filterByCategory(@PathVariable String category, Model model) {
         try {
-            List<PasswordEntry> passwords = passwordEntryService.findByCategory(category);
+            List<PasswordEntryDTO> passwords = passwordEntryService.findByCategory(category);
             int filteredCount = passwords.size();
             
             model.addAttribute("passwords", passwords);
@@ -67,7 +67,7 @@ public class WebController {
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
             
             // Calcola il totale generale per il badge "Tutte"
-            List<PasswordEntry> allPasswords = passwordEntryService.findAll();
+            List<PasswordEntryDTO> allPasswords = passwordEntryService.findAll();
             model.addAttribute("totalCount", allPasswords.size());
             
             return "index";
@@ -88,8 +88,7 @@ public class WebController {
         if (!passwordEntryService.isMasterPasswordSet()) {
             return "redirect:/login";
         }
-        model.addAttribute("passwordEntry", new PasswordEntry());
-        model.addAttribute("isEdit", false);
+        model.addAttribute("passwordEntryForm", new PasswordEntryForm());
         return "password-form";
     }
     
@@ -101,10 +100,8 @@ public class WebController {
         }
         
         try {
-            PasswordEntry passwordEntry = passwordEntryService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ID password non valido:" + id));
-            model.addAttribute("passwordEntry", passwordEntry);
-            model.addAttribute("isEdit", true);
+            PasswordEntryForm form = passwordEntryService.findByIdForEdit(id);
+            model.addAttribute("passwordEntryForm", form);
             return "password-form";
         } catch (Exception e) {
             return "redirect:/?error=" + e.getMessage();
@@ -112,32 +109,17 @@ public class WebController {
     }
     
     @PostMapping("/save")
-    public String savePassword(@ModelAttribute PasswordEntry passwordEntry, 
+    public String savePassword(@ModelAttribute PasswordEntryForm passwordEntryForm, 
                              RedirectAttributes redirectAttributes) {
-        
-        System.out.println("=== CONTROLLER SAVE - INIZIO ===");
-        System.out.println("Master password impostata: " + passwordEntryService.isMasterPasswordSet());
-        System.out.println("Titolo: " + passwordEntry.getTitle());
-        System.out.println("Username: " + passwordEntry.getUsername());
-        System.out.println("Password (IN CHIARO dal form): " + passwordEntry.getEncryptedPassword());
-        System.out.println("URL: " + passwordEntry.getUrl());
-        System.out.println("Note: " + passwordEntry.getNotes());
-        
         try {
-            PasswordEntry saved = passwordEntryService.save(passwordEntry);
-            System.out.println("DOPO service.save() - ID: " + saved.getId());
-            System.out.println("Password nel record salvato: " + saved.getEncryptedPassword());
-            
+            passwordEntryService.save(passwordEntryForm);
             redirectAttributes.addFlashAttribute("successMessage", 
-                passwordEntry.getId() == null ? "Password salvata con successo!" : "Password aggiornata con successo!");
-                
+                passwordEntryForm.getId() == null ? 
+                "Password salvata con successo!" : 
+                "Password aggiornata con successo!");
         } catch (Exception e) {
-            System.out.println("ERRORE CRITICO nel salvataggio: " + e.getMessage());
-            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Errore: " + e.getMessage());
         }
-        
-        System.out.println("=== CONTROLLER SAVE - FINE ===");
         return "redirect:/";
     }
     
@@ -163,7 +145,7 @@ public class WebController {
                                  @RequestParam String query, 
                                  Model model) {
         try {
-            List<PasswordEntry> passwords = passwordEntryService.findByCategoryAndSearch(category, query);
+            List<PasswordEntryDTO> passwords = passwordEntryService.findByCategoryAndSearch(category, query);
             model.addAttribute("passwords", passwords);
             model.addAttribute("currentCategory", category);
             model.addAttribute("searchQuery", query);
