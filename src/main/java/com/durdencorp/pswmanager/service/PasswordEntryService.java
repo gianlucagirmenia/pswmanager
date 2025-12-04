@@ -193,11 +193,12 @@ public class PasswordEntryService {
     
     @Transactional
     public void sanitizeAndReencryptAll() {
-        System.out.println("=== SANITIZZAZIONE E RICIFRATURA DI TUTTI I RECORD ===");
+        System.out.println("=== SANITIZZAZIONE AUTOMATICA DI TUTTI I RECORD ===");
         
         List<PasswordEntry> allEntries = repository.findAll();
         int fixedCount = 0;
         int alreadyEncryptedCount = 0;
+        int errorCount = 0;
         
         for (PasswordEntry entry : allEntries) {
             String currentPassword = entry.getEncryptedPassword();
@@ -205,25 +206,74 @@ public class PasswordEntryService {
             if (currentPassword != null && !currentPassword.isEmpty()) {
                 try {
                     // Verifica se è cifrata correttamente
-                    String testDecrypt = encryptionUtil.decrypt(currentPassword);
-                    // Se non lancia eccezione, è già cifrata correttamente
+                    encryptionUtil.decrypt(currentPassword);
                     alreadyEncryptedCount++;
-                    System.out.println("✓ " + entry.getTitle() + " - già cifrata correttamente");
                     
                 } catch (Exception e) {
-                    // Se fallisce, la password è in chiaro - ricifrala
-                    System.out.println("✗ " + entry.getTitle() + " - password in chiaro, ricifro...");
-                    
-                    String encryptedPassword = encryptionUtil.encrypt(currentPassword);
-                    entry.setEncryptedPassword(encryptedPassword);
-                    repository.save(entry);
-                    fixedCount++;
+                    // Password in chiaro - ricifra
+                    try {
+                        String encryptedPassword = encryptionUtil.encrypt(currentPassword);
+                        entry.setEncryptedPassword(encryptedPassword);
+                        repository.save(entry);
+                        fixedCount++;
+                        
+                        System.out.println("✅ Sanitizzato: " + entry.getTitle() + 
+                                         " (ID: " + entry.getId() + ")");
+                        
+                    } catch (Exception encryptionError) {
+                        errorCount++;
+                        System.err.println("❌ Errore nella sanitizzazione di " + entry.getTitle() + 
+                                         ": " + encryptionError.getMessage());
+                    }
                 }
             }
         }
         
         repository.flush();
-        System.out.println("Sanitizzazione completata: " + fixedCount + " record ricifrati, " + alreadyEncryptedCount + " già corretti");
+        
+        System.out.println("=== REPORT SANITIZZAZIONE ===");
+        System.out.println("Record totali: " + allEntries.size());
+        System.out.println("✅ Già cifrati correttamente: " + alreadyEncryptedCount);
+        System.out.println("🔄 Ricifrati: " + fixedCount);
+        System.out.println("❌ Errori: " + errorCount);
+        System.out.println("=== FINE REPORT ===");
+    }
+    
+    @Transactional
+    public boolean checkAndSanitizeIfNeeded() {
+        System.out.println("=== VERIFICA AUTOMATICA SANITIZZAZIONE ===");
+        
+        if (!isMasterPasswordSet()) {
+            throw new IllegalStateException("Master password non impostata");
+        }
+        
+        List<PasswordEntry> allEntries = repository.findAll();
+        boolean foundClearText = false;
+        
+        // Prima fase: verifica se ci sono password in chiaro
+        for (PasswordEntry entry : allEntries) {
+            String currentPassword = entry.getEncryptedPassword();
+            
+            if (currentPassword != null && !currentPassword.isEmpty()) {
+                try {
+                    // Prova a decifrare - se fallisce, è in chiaro
+                    encryptionUtil.decrypt(currentPassword);
+                } catch (Exception e) {
+                    foundClearText = true;
+                    break; // Trovata almeno una, possiamo fermarci
+                }
+            }
+        }
+        
+        // Se ci sono password in chiaro, esegui la sanitizzazione completa
+        if (foundClearText) {
+            System.out.println("Trovate password in chiaro, eseguo sanitizzazione automatica");
+            sanitizeAndReencryptAll();
+            return true;
+        }
+        
+        System.out.println("Nessuna password in chiaro trovata, sanitizzazione non necessaria");
+        return false;
     }
     
 }

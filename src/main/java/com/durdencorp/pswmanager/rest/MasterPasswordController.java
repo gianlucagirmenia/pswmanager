@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.durdencorp.pswmanager.service.MasterPasswordEncryption;
 import com.durdencorp.pswmanager.service.PasswordEntryService;
 
 @Controller
@@ -15,9 +14,6 @@ public class MasterPasswordController {
     
     @Autowired
     private PasswordEntryService passwordEntryService;
-    
-    @Autowired
-    private MasterPasswordEncryption encryptionUtil;
     
     // Pagina di login con master password
     @GetMapping("/login")
@@ -40,7 +36,17 @@ public class MasterPasswordController {
                 throw new RuntimeException("Master password non valida");
             }
             
-            redirectAttributes.addFlashAttribute("successMessage", "Accesso effettuato con successo!");
+            // ESECUZIONE AUTOMATICA DELLA SANITIZZAZIONE
+            boolean needsSanitization = passwordEntryService.checkAndSanitizeIfNeeded();
+            
+            if (needsSanitization) {
+                redirectAttributes.addFlashAttribute("successMessage", 
+                    "Accesso effettuato con successo! ✅ Database sanitizzato automaticamente.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", 
+                    "Accesso effettuato con successo!");
+            }
+            
             return "redirect:/";
             
         } catch (Exception e) {
