@@ -544,9 +544,11 @@
 		        </div>
 		    </div>
 			
-			<button type="button" class="new-btn" 
-			        onclick="window.location.href='/new'">
+			<button type="button" class="new-btn" onclick="window.location.href='/new'">
 			    ➕ Inserisci Nuovo Elemento
+			</button>
+			<button type="button" class="tool-btn" onclick="window.location.href='/security'" style="background: #17a2b8;">
+			    🛡️ Security Dashboard
 			</button>
 		    <table th:if="${passwords != null and !passwords.empty}" class="password-table" id="passwordTable">
 		        <!-- Il resto della tabella rimane uguale -->

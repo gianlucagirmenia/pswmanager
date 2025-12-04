@@ -1,8 +1,9 @@
 package com.durdencorp.pswmanager.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import com.durdencorp.pswmanager.dto.PasswordEntryDTO;
 import com.durdencorp.pswmanager.dto.PasswordEntryForm;
 import com.durdencorp.pswmanager.model.PasswordEntry;
 import com.durdencorp.pswmanager.repository.PasswordEntryRepository;
+import com.durdencorp.pswmanager.service.security.BreachCheckResult;
+import com.durdencorp.pswmanager.service.security.HibpService;
 
 @Service
 @Transactional
@@ -29,6 +32,9 @@ public class PasswordEntryService {
     
     @Autowired
     private CategoryService categoryService;
+    
+    @Autowired
+    private HibpService hibpService; 
     
     public boolean setAndVerifyMasterPassword(String masterPassword) {
         return encryptionUtil.setAndVerifyMasterPassword(masterPassword);
@@ -274,6 +280,105 @@ public class PasswordEntryService {
         
         System.out.println("Nessuna password in chiaro trovata, sanitizzazione non necessaria");
         return false;
+    }
+    
+    /**
+     * Controlla una singola password contro HIBP
+     */
+    public BreachCheckResult checkPasswordBreach(String password) {
+        return hibpService.checkPassword(password);
+    }
+    
+    /**
+     * Controlla TUTTE le password nel database
+     */
+    @Transactional(readOnly = true)
+    public List<PasswordBreachReport> checkAllPasswordsForBreaches() {
+        List<PasswordEntry> allEntries = repository.findAll();
+        List<PasswordBreachReport> reports = new ArrayList<>();
+        
+        // Estrai tutte le password decifrate
+        List<String> passwords = allEntries.stream()
+            .map(entry -> {
+                try {
+                    return encryptionUtil.decrypt(entry.getEncryptedPassword());
+                } catch (Exception e) {
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+        
+        // Controllo batch per performance
+        Map<String, BreachCheckResult> results = hibpService.checkPasswords(passwords);
+        
+        // Crea report
+        for (PasswordEntry entry : allEntries) {
+            try {
+                String decryptedPassword = encryptionUtil.decrypt(entry.getEncryptedPassword());
+                BreachCheckResult result = results.get(decryptedPassword);
+                
+                if (result != null) {
+                    reports.add(new PasswordBreachReport(
+                        entry.getId(),
+                        entry.getTitle(),
+                        entry.getUsername(),
+                        entry.getUrl(),
+                        result
+                    ));
+                }
+                
+            } catch (Exception e) {
+                // Ignora errori di decifratura
+            }
+        }
+        
+        return reports;
+    }
+    
+    /**
+     * Trova password compromesse
+     */
+    @Transactional(readOnly = true)
+    public List<PasswordBreachReport> findCompromisedPasswords() {
+        return checkAllPasswordsForBreaches().stream()
+            .filter(report -> report.getBreachCheckResult().isCompromised())
+            .collect(Collectors.toList());
+    }
+    
+ // DTO per report
+    public static class PasswordBreachReport {
+        private final Long entryId;
+        private final String title;
+        private final String username;
+        private final String url;
+        private final BreachCheckResult breachCheckResult;
+        
+        public PasswordBreachReport(Long entryId, String title, String username, 
+                                  String url, BreachCheckResult breachCheckResult) {
+            this.entryId = entryId;
+            this.title = title;
+            this.username = username;
+            this.url = url;
+            this.breachCheckResult = breachCheckResult;
+        }
+        
+        // Getters
+        public Long getEntryId() { return entryId; }
+        public String getTitle() { return title; }
+        public String getUsername() { return username; }
+        public String getUrl() { return url; }
+        public BreachCheckResult getBreachCheckResult() { return breachCheckResult; }
+        
+        public String getRiskColor() {
+            switch (breachCheckResult.getRiskLevel()) {
+                case "CRITICAL": return "#dc3545"; // Rosso
+                case "HIGH": return "#fd7e14";     // Arancione
+                case "MEDIUM": return "#ffc107";   // Giallo
+                case "LOW": return "#28a745";      // Verde
+                default: return "#6c757d";         // Grigio
+            }
+        }
     }
     
 }

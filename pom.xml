@@ -5,14 +5,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.0</version>
+		<version>3.1.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.durdencorp</groupId>
 	<artifactId>pswmanager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>pswmanager</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Manager di gestione password</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -38,12 +38,6 @@
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
 		</dependency>
 		
 		<dependency>
@@ -78,6 +72,18 @@
 		    <artifactId>spring-session-core</artifactId>
 		</dependency>
 		
+		<dependency>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter-api</artifactId>
+		    <scope>test</scope>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter-engine</artifactId>
+		    <scope>test</scope>
+		</dependency>
+		
 		<!--
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
@@ -94,6 +100,12 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		
+		<testResources>
+	        <testResource>
+	            <directory>src/test/resources</directory>
+	        </testResource>
+	    </testResources>
 	</build>
 
 </project>
