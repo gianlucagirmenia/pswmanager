@@ -2,69 +2,89 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Dashboard</title>
+    
+    <!-- Collegamento al CSS esterno -->
+    <link th:href="@{/css/password.css}" rel="stylesheet">
+    
     <style>
-        .security-dashboard {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
+        /* Stili specifici per la security dashboard */
         .security-card {
             background: white;
             border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+        
+        .security-card h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .risk-badge {
             display: inline-block;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
             color: white;
+            text-transform: uppercase;
         }
         
         .risk-critical { background: #dc3545; }
         .risk-high { background: #fd7e14; }
         .risk-medium { background: #ffc107; color: #212529; }
         .risk-low { background: #28a745; }
+        .risk-none { background: #6c757d; }
         
         .breach-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .breach-table th {
-            background: #f8f9fa;
-            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
             text-align: left;
-            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
         }
         
         .breach-table td {
-            padding: 12px;
-            border-bottom: 1px solid #dee2e6;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e8ed;
         }
         
         .breach-table tr:hover {
-            background: #f8f9fa;
+            background-color: #f8f9fa;
         }
         
-        .scan-btn {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
+        .breach-table tr:last-child td {
+            border-bottom: none;
         }
         
-        .scan-btn:hover {
+        .security-btn {
+            background: #17a2b8; 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            margin: 5px 5px 5px 0; 
+            border-radius: 4px; 
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .security-btn:hover {
             background: #138496;
         }
         
@@ -81,53 +101,125 @@
             padding: 20px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-top: 4px solid #3498db;
         }
         
         .stat-value {
             font-size: 36px;
             font-weight: bold;
             margin: 10px 0;
+            color: #2c3e50;
         }
         
         .stat-label {
             color: #6c757d;
             font-size: 14px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .progress-container {
+            background: #e9ecef;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .progress-bar {
+            background: #17a2b8;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: nowrap;
+        }
+        
+        .no-breaches {
+            text-align: center;
+            padding: 40px;
+            color: #28a745;
+        }
+        
+        .no-breaches h3 {
+            color: #28a745;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="security-dashboard">
+    <div class="container">
         <h1>🛡️ Security Dashboard</h1>
+        
+        <!-- Messaggi flash -->
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+        
+        <!-- Barra superiore -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a th:href="@{/}" class="tool-btn" style="text-decoration: none; display: inline-block;">
+                ← Torna alla Lista
+            </a>
+            <a th:href="@{/logout}" class="clear-search-btn" style="text-decoration: none; color: white; display: inline-block;">
+                🚪 Logout
+            </a>
+        </div>
         
         <div class="security-card">
             <h2>🔍 Scansione Sicurezza</h2>
-            <p>Verifica tutte le tue password contro database di leak noti.</p>
-            <button class="scan-btn" onclick="runFullScan()">
+            <p>Verifica tutte le tue password contro database di leak noti utilizzando il servizio <strong>Have I Been Pwned (HIBP)</strong>.</p>
+            
+            <button class="security-btn" onclick="runFullScan()" id="scanBtn">
                 🚀 Esegui Scansione Completa
             </button>
-            <div id="scanProgress" style="margin-top: 15px; display: none;">
-                <div style="background: #e9ecef; height: 10px; border-radius: 5px; overflow: hidden;">
-                    <div id="progressBar" style="background: #17a2b8; height: 100%; width: 0%; 
-                         transition: width 0.3s;"></div>
+            
+            <!-- Bottone Sanitizzazione -->
+            <form th:action="@{/admin/sanitize}" method="post" style="display: inline;">
+                <button type="submit" class="security-btn"
+                    onclick="return confirm('Sei sicuro di voler sanitizzare il database?\nQuesta operazione verificherà tutte le password e le ricifrerà se necessario.')">
+                    🛡️ Sanitizza Database
+                </button>
+            </form>
+            
+            <div id="scanProgress" style="margin-top: 20px; display: none;">
+                <div class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
                 </div>
-                <p id="progressText" style="text-align: center; margin-top: 5px;">Inizializzazione...</p>
+                <p id="progressText" style="text-align: center; margin-top: 10px; color: #6c757d;">Inizializzazione...</p>
             </div>
         </div>
         
-        <div id="statsSection" class="stats-grid" style="display: none;">
-            <!-- Popolato dinamicamente -->
-        </div>
+        <!-- Statistiche -->
+        <div id="statsSection" class="stats-grid" style="display: none;"></div>
         
+        <!-- Password Compromesse -->
         <div id="breachesSection" class="security-card" style="display: none;">
             <h2>🚨 Password Compromesse</h2>
             <table class="breach-table" id="breachTable">
                 <thead>
                     <tr>
-                        <th>Servizio</th>
-                        <th>Username</th>
-                        <th>Violazioni</th>
-                        <th>Rischio</th>
-                        <th>Azioni</th>
+                        <th width="25%">Servizio</th>
+                        <th width="20%">Username</th>
+                        <th width="15%">Violazioni</th>
+                        <th width="15%">Rischio</th>
+                        <th width="25%">Azioni</th>
                     </tr>
                 </thead>
                 <tbody id="breachTableBody">
@@ -136,23 +228,29 @@
             </table>
         </div>
         
+        <!-- Informazioni -->
         <div class="security-card">
-            <h3>ℹ️ Informazioni su HIBP</h3>
-            <p><strong>Have I Been Pwned (HIBP)</strong> è un servizio gratuito che ti permette di verificare se le tue password sono state compromesse in data breach noti.</p>
-            <p>⚠️ <strong>Nota importante:</strong> Le password NON vengono inviate a HIBP in chiaro. Viene utilizzata la tecnica <em>k-anonymity</em> che invia solo i primi 5 caratteri dell'hash SHA-1.</p>
-            <p>🔒 <strong>Sicurezza garantita:</strong> La tua privacy è protetta. Nessuna password completa lascia mai il tuo dispositivo.</p>
+            <h2>ℹ️ Informazioni su HIBP</h2>
+            <div class="info-box">
+                <p><strong>Have I Been Pwned (HIBP)</strong> è un servizio gratuito che ti permette di verificare se le tue password sono state compromesse in data breach noti.</p>
+                <p>⚠️ <strong>Nota importante:</strong> Le password NON vengono inviate a HIBP in chiaro. Viene utilizzata la tecnica <em>k-anonymity</em> che invia solo i primi 5 caratteri dell'hash SHA-1.</p>
+                <p>🔒 <strong>Sicurezza garantita:</strong> La tua privacy è protetta. Nessuna password completa lascia mai il tuo dispositivo.</p>
+            </div>
         </div>
     </div>
 
+    <!-- Collegamento al JavaScript esterno -->
+    <script th:src="@{/js/passwords.js}"></script>
+    
     <script>
         async function runFullScan() {
-            const scanBtn = document.querySelector('.scan-btn');
+            const scanBtn = document.getElementById('scanBtn');
             const progressDiv = document.getElementById('scanProgress');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             
             scanBtn.disabled = true;
-            scanBtn.textContent = '⏳ Scansione in corso...';
+            scanBtn.innerHTML = '⏳ Scansione in corso...';
             progressDiv.style.display = 'block';
             
             try {
@@ -178,7 +276,7 @@
                 
                 setTimeout(() => {
                     scanBtn.disabled = false;
-                    scanBtn.textContent = '🔄 Esegui Nuova Scansione';
+                    scanBtn.innerHTML = '🔄 Esegui Nuova Scansione';
                     progressDiv.style.display = 'none';
                     progressBar.style.width = '0%';
                 }, 2000);
@@ -190,7 +288,7 @@
                 
                 setTimeout(() => {
                     scanBtn.disabled = false;
-                    scanBtn.textContent = '🚀 Riprova Scansione';
+                    scanBtn.innerHTML = '🚀 Riprova Scansione';
                     progressDiv.style.display = 'none';
                     progressBar.style.width = '0%';
                     progressBar.style.background = '#17a2b8';
@@ -206,7 +304,8 @@
                 'LOW': '#28a745',
                 'MEDIUM': '#ffc107',
                 'HIGH': '#fd7e14',
-                'CRITICAL': '#dc3545'
+                'CRITICAL': '#dc3545',
+                'NONE': '#6c757d'
             }[stats.overallRisk] || '#6c757d';
             
             statsSection.innerHTML = `
@@ -239,13 +338,13 @@
             const breachesSection = document.getElementById('breachesSection');
             const tableBody = document.getElementById('breachTableBody');
             
-            if (breaches.length === 0) {
+            if (!breaches || breaches.length === 0) {
                 breachesSection.style.display = 'block';
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px;">
+                        <td colspan="5" class="no-breaches">
                             <div style="font-size: 48px;">🎉</div>
-                            <h3 style="color: #28a745;">Nessuna password compromessa!</h3>
+                            <h3>Nessuna password compromessa!</h3>
                             <p>Tutte le tue password sono sicure e non presenti in data breach noti.</p>
                         </td>
                     </tr>
@@ -259,48 +358,59 @@
                 <tr>
                     <td>
                         <strong>${breach.title}</strong><br>
-                        <small>${breach.url || 'Nessun URL'}</small>
+                        <small style="color: #6c757d;">${breach.url || 'Nessun URL'}</small>
                     </td>
                     <td>${breach.username || 'N/A'}</td>
                     <td>
-                        <span style="color: ${breach.breachCheckResult.breachCount > 0 ? '#dc3545' : '#28a745'}; 
+                        <span style="color: ${breach.breachCheckResult?.breachCount > 0 ? '#dc3545' : '#28a745'}; 
                               font-weight: bold;">
-                            ${breach.breachCheckResult.breachCount} violazioni
+                            ${breach.breachCheckResult?.breachCount || 0} violazioni
                         </span>
                     </td>
                     <td>
-                        <span class="risk-badge" style="background: ${breach.riskColor}">
-                            ${breach.breachCheckResult.riskLevel}
+                        <span class="risk-badge ${getRiskClass(breach.breachCheckResult?.riskLevel)}">
+                            ${breach.breachCheckResult?.riskLevel || 'N/A'}
                         </span>
                     </td>
                     <td>
-                        <button onclick="editPassword(${breach.entryId})" 
-                                style="background: #f39c12; color: white; border: none; padding: 5px 10px; 
-                                       border-radius: 3px; cursor: pointer; margin-right: 5px;">
-                            ✏️ Modifica
-                        </button>
-                        <button onclick="generateNewPassword(${breach.entryId})" 
-                                style="background: #17a2b8; color: white; border: none; padding: 5px 10px; 
-                                       border-radius: 3px; cursor: pointer;">
-                            🎲 Genera Nuova
-                        </button>
+                        <div class="action-buttons">
+                            <a href="/edit/${breach.entryId}" class="edit-btn" 
+                               style="text-decoration: none; color: white; display: inline-block;">
+                                ✏️ Modifica
+                            </a>
+                            <button onclick="generateNewPassword(${breach.entryId})" 
+                                    class="tool-btn" style="padding: 8px 12px; font-size: 12px;">
+                                🎲 Genera Nuova
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
         }
         
-        function editPassword(id) {
-            window.location.href = `/edit/${id}`;
+        function getRiskClass(riskLevel) {
+            if (!riskLevel) return 'risk-none';
+            const risk = riskLevel.toUpperCase();
+            if (risk.includes('CRITICAL')) return 'risk-critical';
+            if (risk.includes('HIGH')) return 'risk-high';
+            if (risk.includes('MEDIUM')) return 'risk-medium';
+            if (risk.includes('LOW')) return 'risk-low';
+            return 'risk-none';
         }
         
         async function generateNewPassword(id) {
-            const response = await fetch('/api/password-tools/generate');
-            const newPassword = await response.text();
-            
-            if (confirm(`Generata nuova password: ${newPassword}\n\nVuoi copiarla negli appunti?`)) {
-                navigator.clipboard.writeText(newPassword);
-                alert('Password copiata! Ora modifica il record e incollala.');
-                editPassword(id);
+            try {
+                const response = await fetch('/api/password-tools/generate');
+                const newPassword = await response.text();
+                
+                if (confirm(`Generata nuova password: ${newPassword}\n\nVuoi copiarla negli appunti e andare alla modifica?`)) {
+                    await navigator.clipboard.writeText(newPassword);
+                    alert('✅ Password copiata negli appunti! Ora verrai reindirizzato alla pagina di modifica.');
+                    window.location.href = `/edit/${id}`;
+                }
+            } catch (error) {
+                console.error('Errore nella generazione password:', error);
+                alert('❌ Errore nella generazione della password.');
             }
         }
     </script>

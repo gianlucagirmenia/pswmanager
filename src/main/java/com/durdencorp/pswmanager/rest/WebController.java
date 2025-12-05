@@ -16,7 +16,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.durdencorp.pswmanager.dto.PasswordEntryDTO;
 import com.durdencorp.pswmanager.dto.PasswordEntryForm;
-import com.durdencorp.pswmanager.model.PasswordEntry;
 import com.durdencorp.pswmanager.service.PasswordEntryService;
 
 @Controller
@@ -41,7 +40,7 @@ public class WebController {
             model.addAttribute("categories", passwordEntryService.getAllCategories());
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
             
-            return "index";
+            return "passwords/list";
             
         } catch (Exception e) {
             model.addAttribute("passwords", new ArrayList<>());
@@ -49,36 +48,7 @@ public class WebController {
             model.addAttribute("errorMessage", "Errore nel caricamento: " + e.getMessage());
             model.addAttribute("categories", new ArrayList<>());
             model.addAttribute("categoryStats", new HashMap<>());
-            return "index";
-        }
-    }
-    
-    // Filtra per categoria
-    @GetMapping("/category/{category}")
-    public String filterByCategory(@PathVariable String category, Model model) {
-        try {
-            List<PasswordEntryDTO> passwords = passwordEntryService.findByCategory(category);
-            int filteredCount = passwords.size();
-            
-            model.addAttribute("passwords", passwords);
-            model.addAttribute("currentCategory", category);
-            model.addAttribute("filteredCount", filteredCount); // CONTEggio FILTRATO
-            model.addAttribute("categories", passwordEntryService.getAllCategories());
-            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
-            
-            // Calcola il totale generale per il badge "Tutte"
-            List<PasswordEntryDTO> allPasswords = passwordEntryService.findAll();
-            model.addAttribute("totalCount", allPasswords.size());
-            
-            return "index";
-        } catch (SecurityException e) {
-            return "redirect:/login";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Errore nel filtro per categoria: " + e.getMessage());
-            model.addAttribute("categories", new ArrayList<>());
-            model.addAttribute("categoryStats", new HashMap<>());
-            model.addAttribute("totalCount", 0);
-            return home(model);
+            return "passwords/list";
         }
     }
     
@@ -89,7 +59,7 @@ public class WebController {
             return "redirect:/login";
         }
         model.addAttribute("passwordEntryForm", new PasswordEntryForm());
-        return "password-form";
+        return "passwords/form";
     }
     
     // Mostra il form per modificare una password esistente
@@ -102,7 +72,7 @@ public class WebController {
         try {
             PasswordEntryForm form = passwordEntryService.findByIdForEdit(id);
             model.addAttribute("passwordEntryForm", form);
-            return "password-form";
+            return "passwords/form";
         } catch (Exception e) {
             return "redirect:/?error=" + e.getMessage();
         }
@@ -139,6 +109,35 @@ public class WebController {
         return "redirect:/";
     }
     
+    // Filtra per categoria
+    @GetMapping("/category/{category}")
+    public String filterByCategory(@PathVariable String category, Model model) {
+        try {
+            List<PasswordEntryDTO> passwords = passwordEntryService.findByCategory(category);
+            int filteredCount = passwords.size();
+            
+            model.addAttribute("passwords", passwords);
+            model.addAttribute("currentCategory", category);
+            model.addAttribute("filteredCount", filteredCount); // CONTEggio FILTRATO
+            model.addAttribute("categories", passwordEntryService.getAllCategories());
+            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
+            
+            // Calcola il totale generale per il badge "Tutte"
+            List<PasswordEntryDTO> allPasswords = passwordEntryService.findAll();
+            model.addAttribute("totalCount", allPasswords.size());
+            
+            return "passwords/list";
+        } catch (SecurityException e) {
+            return "redirect:/login";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Errore nel filtro per categoria: " + e.getMessage());
+            model.addAttribute("categories", new ArrayList<>());
+            model.addAttribute("categoryStats", new HashMap<>());
+            model.addAttribute("totalCount", 0);
+            return home(model);
+        }
+    }
+    
     // Ricerca all'interno di una categoria
     @GetMapping("/category/{category}/search")
     public String searchInCategory(@PathVariable String category, 
@@ -151,7 +150,7 @@ public class WebController {
             model.addAttribute("searchQuery", query);
             model.addAttribute("categories", passwordEntryService.getAllCategories());
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
-            return "index";
+            return "passwords/list";
         } catch (SecurityException e) {
             return "redirect:/login";
         } catch (Exception e) {
@@ -166,7 +165,7 @@ public class WebController {
         try {
             model.addAttribute("categories", passwordEntryService.getAllCategories());
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
-            return "categories";
+            return "fragments/categories";
         } catch (SecurityException e) {
             return "redirect:/login";
         }

@@ -1,0 +1,8 @@
+<!-- messages.html -->
+<div th:fragment="flashMessages">
+    <!-- Messaggio di successo -->
+    <div th:if="${successMessage}" class="success-message" id="successMessage" th:text="${successMessage}"></div>
+    
+    <!-- Messaggio di errore -->
+    <div th:if="${errorMessage}" class="error-message" id="errorMessage" th:text="${errorMessage}"></div>
+</div>

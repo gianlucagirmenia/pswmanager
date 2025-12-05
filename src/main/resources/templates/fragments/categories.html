@@ -1,0 +1,50 @@
+<!-- categories.html -->
+<div th:fragment="categoryFilters" th:if="${not #maps.isEmpty(categoryStats) or currentCategory == null}">
+    <h4>📁 Categorie</h4>
+    
+    <!-- Statistiche Categorie -->
+    <div class="category-stats" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+        <!-- Badge "Tutte" con conteggio -->
+        <a th:href="@{/}" 
+           class="category-badge" 
+           th:classappend="${currentCategory == null} ? 'active' : ''"
+           style="text-decoration: none;">
+            Tutte 
+            <span class="badge" th:text="${totalCount != null ? totalCount : 0}">0</span>
+        </a>
+        
+        <!-- Categorie individuali -->
+        <th:block th:if="${not #maps.isEmpty(categoryStats)}">
+            <th:block th:each="stat : ${categoryStats}">
+                <a th:href="@{/category/{cat}(cat=${stat.key})}" 
+                   class="category-badge" 
+                   th:classappend="${currentCategory == stat.key} ? 'active' : ''"
+                   style="text-decoration: none;">
+                    <span th:text="${stat.key}">Categoria</span>
+                    <span class="badge" th:text="${stat.value}">0</span>
+                </a>
+            </th:block>
+        </th:block>
+    </div>
+    
+    <!-- Mostra conteggio filtrato se attivo -->
+    <div th:if="${currentCategory != null and filteredCount != null}" class="current-category" style="margin-bottom: 15px;">
+        <strong>Filtro attivo:</strong> 
+        <span th:text="${currentCategory}" class="badge active"></span>
+        <span style="margin-left: 10px; color: #6c757d;">
+            (Mostrando <span th:text="${filteredCount}">0</span> di <span th:text="${totalCount}">0</span> record)
+        </span>
+        <a th:href="@{/}" class="tool-btn" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;">
+            ❌ Rimuovi Filtro
+        </a>
+    </div>
+    
+    <!-- Mostra solo categoria corrente senza conteggio -->
+    <div th:if="${currentCategory != null and filteredCount == null}" class="current-category" style="margin-bottom: 15px;">
+        <strong>Filtro attivo:</strong> 
+        <span th:text="${currentCategory}" class="badge active"></span>
+        <a th:href="@{/}" class="tool-btn" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;">
+            ❌ Rimuovi Filtro
+        </a>
+    </div>
+</div>
