@@ -1,6 +1,6 @@
-# My Test Project
+# Password123
 
-Questo è un progetto di test per imparare Git e GitHub.
+Il miglior password manager di sempre! :D
 
 ## Descrizione
-Progetto semplice creato con Spring Boot/Java.
+Il password manager di cui non sapevi di avere bisogno...
