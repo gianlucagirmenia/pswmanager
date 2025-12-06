@@ -18,6 +18,9 @@ import com.durdencorp.pswmanager.dto.PasswordEntryDTO;
 import com.durdencorp.pswmanager.dto.PasswordEntryForm;
 import com.durdencorp.pswmanager.service.PasswordEntryService;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
+@Hidden
 @Controller
 public class WebController {
     

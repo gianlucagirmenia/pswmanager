@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: pswmanager
+  
+  datasource:
+    url: jdbc:sqlite:passwords.db
+    driver-class-name: org.sqlite.JDBC
+    username: ''
+    password: ''
+    type: org.springframework.jdbc.datasource.SimpleDriverDataSource
+  
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 6969
+
+hibp:
+  api:
+    url: https://api.pwnedpasswords.com/range/
+    timeout: 5000
+    retry:
+      count: 3
+
+security:
+  hibp:
+    delay-between-calls: 1500
+    max-passwords-per-minute: 10
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    display-request-duration: true
+    doc-expansion: none
+    default-model-expand-depth: 2
