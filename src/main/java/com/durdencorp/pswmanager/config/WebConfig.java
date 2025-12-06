@@ -1,0 +1,32 @@
+package com.durdencorp.pswmanager.config;
+
+import com.durdencorp.pswmanager.interceptor.RateLimitInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private RateLimitInterceptor rateLimitInterceptor;
+    
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        System.out.println("Registrando RateLimitInterceptor...");
+        
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/login")  // Intercetta sia GET che POST a /login
+                .excludePathPatterns(
+                    "/css/**",
+                    "/js/**", 
+                    "/images/**",
+                    "/favicon.ico",
+                    "/error",
+                    "/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                );
+    }
+}

@@ -17,6 +17,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  
+  # Cache semplice (opzionale, per AuditService se usi cache)
+  cache:
+    type: simple
+    cache-names: audit-cache
 
 server:
   port: 6969
@@ -45,3 +50,18 @@ springdoc:
     display-request-duration: true
     doc-expansion: none
     default-model-expand-depth: 2
+
+# Rate Limiting Configuration
+rate:
+  limit:
+    master-password:
+      max-attempts: 5
+      window-minutes: 15
+    api:
+      max-requests: 100
+      window-minutes: 1
+
+# Audit Log Configuration
+audit:
+  log:
+    retention-days: 90
