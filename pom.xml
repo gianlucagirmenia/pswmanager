@@ -18,9 +18,12 @@
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	    <sqlite.version>3.41.2.2</sqlite.version>
+	    <postgresql.version>42.6.0</postgresql.version>
 	</properties>
 	
 	<dependencies>
+		<!-- Spring Boot Starters -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -41,10 +44,12 @@
 		    <artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 		
-		<!-- SQLite -->
+		<!-- SQLite (per sviluppo locale) -->
 		<dependency>
 		    <groupId>org.xerial</groupId>
 		    <artifactId>sqlite-jdbc</artifactId>
+		    <version>${sqlite.version}</version>
+		    <scope>runtime</scope>
 		</dependency>
 
 		<dependency>
@@ -100,8 +105,56 @@
 		    <groupId>org.apache.logging.log4j</groupId>
 		    <artifactId>log4j-web</artifactId>
 		</dependency>
+		
+		<!-- NOTA: PostgreSQL è stato rimosso dalle dipendenze principali -->
+		<!-- Verrà aggiunto solo nel profilo railway -->
     
 	</dependencies>
+	
+	<profiles>
+	  <!-- Profilo per sviluppo locale (default) -->
+	  <profile>
+	    <id>default</id>
+	    <activation>
+	      <activeByDefault>true</activeByDefault>
+	    </activation>
+	    <properties>
+	      <spring.profiles.active>default</spring.profiles.active>
+	      <build.profile.id>default</build.profile.id>
+	    </properties>
+	  </profile>
+	  
+	  <!-- Profilo per Railway (produzione) -->
+	  <profile>
+	    <id>railway</id>
+	    <properties>
+	      <spring.profiles.active>railway</spring.profiles.active>
+	      <build.profile.id>railway</build.profile.id>
+	    </properties>
+	    <dependencies>
+	      <!-- PostgreSQL solo per Railway -->
+	      <dependency>
+	        <groupId>org.postgresql</groupId>
+	        <artifactId>postgresql</artifactId>
+	        <version>${postgresql.version}</version>
+	        <scope>runtime</scope>
+	      </dependency>
+	    </dependencies>
+	    <build>
+	      <plugins>
+	        <plugin>
+	          <groupId>org.springframework.boot</groupId>
+	          <artifactId>spring-boot-maven-plugin</artifactId>
+	          <configuration>
+	            <profiles>
+	              <profile>railway</profile>
+	            </profiles>
+	          </configuration>
+	        </plugin>
+	      </plugins>
+	    </build>
+	  </profile>
+	</profiles>
 
 	<build>
 	    <plugins>
@@ -113,6 +166,7 @@
 	                <encoding>UTF-8</encoding>
 	                <nonFilteredFileExtensions>
 	                    <nonFilteredFileExtension>db</nonFilteredFileExtension>
+	                    <nonFilteredFileExtension>sqlite</nonFilteredFileExtension>
 	                </nonFilteredFileExtensions>
 	            </configuration>
 	        </plugin>
@@ -141,6 +195,61 @@
 	                <encoding>UTF-8</encoding>
 	            </configuration>
 	        </plugin>
+	        
+	        <!-- Maven Shade Plugin per risolvere dipendenze SQLite -->
+	        <plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-shade-plugin</artifactId>
+	            <version>3.4.1</version>
+	            <executions>
+	                <execution>
+	                    <phase>package</phase>
+	                    <goals>
+	                        <goal>shade</goal>
+	                    </goals>
+	                    <configuration>
+	                        <createDependencyReducedPom>false</createDependencyReducedPom>
+	                        <filters>
+	                            <filter>
+	                                <artifact>*:*</artifact>
+	                                <excludes>
+	                                    <exclude>META-INF/*.SF</exclude>
+	                                    <exclude>META-INF/*.DSA</exclude>
+	                                    <exclude>META-INF/*.RSA</exclude>
+	                                </excludes>
+	                            </filter>
+	                        </filters>
+	                    </configuration>
+	                </execution>
+	            </executions>
+	        </plugin>
 	    </plugins>
+	    
+	    <!-- Risorse -->
+	    <resources>
+	        <resource>
+	            <directory>src/main/resources</directory>
+	            <filtering>true</filtering>
+	            <includes>
+	                <include>**/*.yml</include>
+	                <include>**/*.yaml</include>
+	                <include>**/*.properties</include>
+	                <include>**/*.xml</include>
+	                <include>**/*.html</include>
+	                <include>**/*.css</include>
+	                <include>**/*.js</include>
+	            </includes>
+	        </resource>
+	        <resource>
+	            <directory>src/main/resources</directory>
+	            <filtering>false</filtering>
+	            <excludes>
+	                <exclude>**/*.yml</exclude>
+	                <exclude>**/*.yaml</exclude>
+	                <exclude>**/*.properties</exclude>
+	                <exclude>**/*.xml</exclude>
+	            </excludes>
+	        </resource>
+	    </resources>
 	</build>
 </project>

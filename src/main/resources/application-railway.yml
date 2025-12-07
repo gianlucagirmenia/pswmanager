@@ -1,0 +1,95 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 30000
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # Disabilita H2 console in produzione
+  h2:
+    console:
+      enabled: false
+  
+  # File storage locale per backup
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: true  # Solo HTTPS in produzione
+      tracking-modes: cookie
+  
+  # Compressione
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  
+  # Security headers
+  ssl:
+    enabled: false  # Railway gestisce SSL a livello di proxy
+
+# Configurazione specifica Railway
+railway:
+  environment: production
+
+# Logging in produzione
+logging:
+  level:
+    com.durdencorp.pswmanager: INFO
+    com.durdencorp.pswmanager.security: WARN
+    org.springframework: WARN
+    org.hibernate: ERROR
+  file:
+    name: /tmp/application.log  # In Railway usa /tmp per file temporanei
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# HIBP - aumentiamo timeout per rete
+hibp:
+  api:
+    url: https://api.pwnedpasswords.com/range/
+    timeout: 10000  # 10 secondi
+    retry:
+      count: 5
+
+# Rate limiting più conservativo
+rate:
+  limit:
+    master-password:
+      max-attempts: 5
+      window-minutes: 30  # Aumentato da 15 a 30
+    api:
+      max-requests: 60    # Ridotto per evitare abuso
+      window-minutes: 1
+
+# Audit log con path Railway-friendly
+audit:
+  log:
+    retention-days: 30
+    directory: /tmp/audit-logs

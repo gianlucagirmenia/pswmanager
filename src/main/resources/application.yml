@@ -1,6 +1,10 @@
 spring:
   application:
     name: pswmanager
+
+  config:
+    activate:
+      on-profile: default
   
   datasource:
     url: jdbc:sqlite:passwords.db

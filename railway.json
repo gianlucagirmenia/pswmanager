@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "chmod +x mvnw && ./mvnw clean package -DskipTests"
+  },
+  "deploy": {
+    "startCommand": "java -Dserver.port=$PORT -Dspring.profiles.active=railway -jar target/*.jar",
+    "healthcheckPath": "/",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
