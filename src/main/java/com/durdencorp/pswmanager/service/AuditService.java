@@ -18,16 +18,13 @@ public class AuditService {
     public void logMasterPasswordAttempt(HttpServletRequest request, boolean success, String details) {
         String clientIp = getClientIp(request);
         
-        // Log strutturato nel file audit
         LogUtils.setupAuditContext("master_password", "MASTER_PASSWORD_ATTEMPT");
         LogUtils.logAudit("MASTER_PASSWORD_ATTEMPT", 
             String.format("IP: %s, Success: %s, Details: %s", clientIp, success, details), 
             success);
         
-        // Log dettagliato per sicurezza
         LogUtils.logLoginAttempt("master_password", success, clientIp, details);
         
-        // Salva anche nel database
         AuditLog log = new AuditLog(
             "MASTER_PASSWORD_ATTEMPT",
             clientIp,
