@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.durdencorp.pswmanager.service.PasswordGeneratorService;
 import com.durdencorp.pswmanager.service.PasswordStrengthService;
+import com.durdencorp.pswmanager.utils.LogUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,26 +39,23 @@ public class PasswordToolsController {
 		return passwordGeneratorService.generateStrongPassword();
 	}
 
-	// Genera una password personalizzata
 	@PostMapping("/generate-custom")
 	public String generateCustomPassword(@RequestBody PasswordGeneratorService.PasswordOptions options) {
 		return passwordGeneratorService.generatePassword(options);
 	}
 
-	// Analizza la forza di una password
 	@GetMapping("/analyze")
 	public Map<String, Object> analyzePassword(@RequestParam String password) {
-		System.out.println("=== ANALISI PASSWORD ===");
-		System.out.println("Password ricevuta: " + (password != null ? "***" : "null"));
+		LogUtils.logApplication(LogUtils.Level.INFO, "******* ANALISI PASSWORD *******");
+		LogUtils.logApplication(LogUtils.Level.INFO, "Password ricevuta: " + (password != null ? "***" : "null"));
 
 		try {
 			PasswordStrengthService.PasswordStrength strength = passwordStrengthService.analyzeStrength(password);
 			String tips = passwordStrengthService.getStrengthTips(password);
 
-			System.out.println("Risultato analisi: " + strength.getDescription());
-			System.out.println("Tips: " + tips);
+			LogUtils.logApplication(LogUtils.Level.INFO, "Risultato analisi: " + strength.getDescription());
+			LogUtils.logApplication(LogUtils.Level.INFO, "Tips: " + tips);
 
-			// Ritorna una Map invece dell'oggetto custom
 			Map<String, Object> result = new HashMap<>();
 			result.put("description", strength.getDescription());
 			result.put("color", strength.getColor());
@@ -67,7 +65,7 @@ public class PasswordToolsController {
 			return result;
 
 		} catch (Exception e) {
-			System.out.println("ERRORE nell'analisi: " + e.getMessage());
+			LogUtils.logApplication(LogUtils.Level.INFO, "ERRORE nell'analisi: " + e.getMessage());
 			e.printStackTrace();
 
 			Map<String, Object> error = new HashMap<>();
@@ -79,12 +77,10 @@ public class PasswordToolsController {
 		}
 	}
 
-	// MODIFICA la classe interna per essere static e avere costruttore vuoto
 	public static class PasswordAnalysisResult {
 		private PasswordStrengthService.PasswordStrength strength;
 		private String tips;
 
-		// Costruttore vuoto (necessario per Jackson)
 		public PasswordAnalysisResult() {
 		}
 
@@ -93,7 +89,6 @@ public class PasswordToolsController {
 			this.tips = tips;
 		}
 
-		// Getter e Setter (IMPORTANTE: devono essere public)
 		public PasswordStrengthService.PasswordStrength getStrength() {
 			return strength;
 		}

@@ -8,6 +8,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.SessionScope;
 
+import com.durdencorp.pswmanager.utils.LogUtils;
+
 @Service
 @SessionScope
 public class SessionService {
@@ -16,7 +18,7 @@ public class SessionService {
     
     public boolean setMasterPassword(String masterPassword) {
         try {
-            System.out.println("=== SESSION SERVICE - Impostazione Master Password ===");
+            LogUtils.logApplication(LogUtils.Level.DEBUG, "=== SESSION SERVICE - Impostazione Master Password ===");
             
             // Genera la chiave AES dalla master password
             byte[] key = masterPassword.getBytes("UTF-8");
@@ -25,11 +27,11 @@ public class SessionService {
             key = Arrays.copyOf(key, 16);
             this.secretKey = new SecretKeySpec(key, "AES");
             
-            System.out.println("Chiave AES impostata nella sessione");
+            LogUtils.logApplication(LogUtils.Level.DEBUG, "Chiave AES impostata nella sessione");
             return true;
             
         } catch (Exception e) {
-            System.out.println("ERRORE in setMasterPassword: " + e.getMessage());
+            LogUtils.logApplication(LogUtils.Level.DEBUG, "ERRORE in setMasterPassword: " + e.getMessage());
             this.secretKey = null;
             return false;
         }
@@ -45,6 +47,6 @@ public class SessionService {
     
     public void clear() {
         this.secretKey = null;
-        System.out.println("SessionService - Chiave pulita");
+        LogUtils.logApplication(LogUtils.Level.DEBUG, "SessionService - Chiave pulita");
     }
 }

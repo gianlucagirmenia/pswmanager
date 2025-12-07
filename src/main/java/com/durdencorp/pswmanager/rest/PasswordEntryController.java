@@ -67,7 +67,6 @@ public class PasswordEntryController {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 			}
 
-			// Usa il metodo che restituisce DTO
 			List<PasswordEntryDTO> allPasswords = passwordEntryService.findAll();
 			PasswordEntryDTO password = allPasswords.stream().filter(p -> p.getId().equals(id)).findFirst()
 					.orElse(null);
@@ -100,7 +99,6 @@ public class PasswordEntryController {
 		}
 	}
 
-	// UPDATE password esistente - USA FORM
 	@PutMapping("/{id}")
 	public ResponseEntity<Long> updatePassword(@PathVariable Long id, @RequestBody PasswordEntryForm form) {
 		try {
@@ -108,7 +106,6 @@ public class PasswordEntryController {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 			}
 
-			// Assicurati che l'ID nel form corrisponda al path
 			form.setId(id);
 			Long updatedId = passwordEntryService.save(form);
 			return ResponseEntity.ok(updatedId);
@@ -119,7 +116,6 @@ public class PasswordEntryController {
 		}
 	}
 
-	// DELETE password
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deletePassword(@PathVariable Long id) {
 		try {
@@ -134,7 +130,6 @@ public class PasswordEntryController {
 		}
 	}
 
-	// SEARCH per titolo - RESTITUISCE DTO
 	@GetMapping("/search")
 	public ResponseEntity<List<PasswordEntryDTO>> searchByTitle(@RequestParam String title) {
 		try {
@@ -149,7 +144,6 @@ public class PasswordEntryController {
 		}
 	}
 
-	// GET per categoria - RESTITUISCE DTO
 	@GetMapping("/category/{category}")
 	public ResponseEntity<List<PasswordEntryDTO>> getByCategory(@PathVariable String category) {
 		try {
@@ -164,7 +158,6 @@ public class PasswordEntryController {
 		}
 	}
 
-	// SEARCH per categoria e query - RESTITUISCE DTO
 	@GetMapping("/category/{category}/search")
 	public ResponseEntity<List<PasswordEntryDTO>> searchInCategory(@PathVariable String category,
 			@RequestParam String query) {
