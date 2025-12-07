@@ -15,7 +15,6 @@ public class PasswordStrengthResult {
 	@Schema(description = "Suggestions for improvement")
 	private String suggestions;
 
-	// Getters e setters
 	public int getScore() {
 		return score;
 	}

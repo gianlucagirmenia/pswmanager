@@ -65,3 +65,24 @@ rate:
 audit:
   log:
     retention-days: 90
+
+# Logging Configuration
+logging:
+  level:
+    com.durdencorp.pswmanager: DEBUG
+    com.durdencorp.pswmanager.security: INFO
+    com.durdencorp.pswmanager.audit: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type: TRACE
+    org.springframework: WARN
+    org.springframework.web: INFO
+  file:
+    name: ./logs/application.log
+  log4j2:
+    config: classpath:log4j2.xml
+
+# Altri log files (definiti in log4j2.xml)
+log:
+  directory: ./logs
+  max-history: 30
+  max-file-size: 10MB

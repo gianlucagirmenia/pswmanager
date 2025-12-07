@@ -1,5 +1,6 @@
 package com.durdencorp.pswmanager.interceptor;
 
+import com.durdencorp.pswmanager.utils.LogUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,14 +27,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime windowEnd = windowStart.plusMinutes(windowMinutes);
             
-            // Se la finestra temporale è scaduta, resetta
             if (now.isAfter(windowEnd)) {
                 count = 1;
                 windowStart = now;
+                LogUtils.logApplication(LogUtils.Level.DEBUG, "Rate limit window reset for tracker");
                 return true;
             }
             
-            // Controlla se abbiamo superato il limite
             if (count < maxRequests) {
                 count++;
                 return true;
@@ -58,10 +58,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
     }
     
-    // Storage per i tracker
     private final Map<String, RequestTracker> loginTrackers = new ConcurrentHashMap<>();
     
-    // Configurazione da application.yml
     @Value("${rate.limit.master-password.max-attempts:5}")
     private int maxLoginAttempts;
     
@@ -72,57 +70,55 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, 
                            HttpServletResponse response, 
                            Object handler) throws Exception {
+        LogUtils.setupRequestContext(request);
         
         String clientIp = getClientIp(request);
         String requestPath = request.getRequestURI();
         String requestMethod = request.getMethod();
         
-        System.out.println("=== RATE LIMIT INTERCEPTOR ===");
-        System.out.println("Path: " + requestPath + " | Method: " + requestMethod + " | IP: " + clientIp);
+        LogUtils.logApplication(LogUtils.Level.DEBUG, "Interceptor called: {} {} from IP: {}", requestMethod, requestPath, clientIp);
         
-        // Applica rate limiting SOLO per POST a /login (tentativi di login)
         if ("POST".equalsIgnoreCase(requestMethod) && requestPath.equals("/login")) {
-            System.out.println("Applicando rate limiting per POST /login");
             return handleLoginRequest(clientIp, request, response);
         }
         
-        // Per GET /login, aggiungi remainingAttempts alla request se esiste
         if ("GET".equalsIgnoreCase(requestMethod) && requestPath.equals("/login")) {
             handleGetLoginRequest(clientIp, request);
         }
         
-        // Per tutte le altre richieste, permetti
         return true;
     }
     
-    private boolean handleLoginRequest(String clientIp, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private boolean handleLoginRequest(String clientIp, HttpServletRequest request, 
+                                     HttpServletResponse response) throws Exception {
         String trackerKey = "login:" + clientIp;
         
         RequestTracker tracker = loginTrackers.computeIfAbsent(
             trackerKey, k -> new RequestTracker());
         
-        System.out.println("Tentativo login #" + tracker.count + " per IP: " + clientIp);
+        LogUtils.logApplication(LogUtils.Level.INFO, 
+            "Login attempt #{} for IP: {}", tracker.count, clientIp);
         
         if (tracker.canMakeRequest(maxLoginAttempts, loginWindowMinutes)) {
-            // Richiesta permessa
             int remaining = tracker.getRemainingAttempts(maxLoginAttempts);
-            System.out.println("✅ Login permesso. Tentativi rimanenti: " + remaining);
             
-            // Aggiungi tentativi rimanenti come attributo di request (per il controller)
+            LogUtils.logSecurity(LogUtils.Level.INFO, 
+                "Login allowed for IP: {}, remaining attempts: {}", 
+                clientIp, remaining);
+            
             request.setAttribute("remainingAttempts", remaining);
             return true;
         } else {
-            // Rate limit superato
             long retryAfter = tracker.getSecondsUntilReset(loginWindowMinutes);
-            System.out.println("❌ Rate limit SUPERATO per IP: " + clientIp);
-            System.out.println("Tentativi: " + tracker.count + " | Bloccato per: " + retryAfter + " secondi");
             
-            // Salva nella sessione per mostrare nella pagina
+            LogUtils.logSecurity(LogUtils.Level.WARN, 
+                "Rate limit exceeded for IP: {}, attempts: {}, blocked for {} seconds", 
+                clientIp, tracker.count, retryAfter);
+            
             request.getSession().setAttribute("rateLimitError", true);
             request.getSession().setAttribute("retryAfterSeconds", retryAfter);
             request.getSession().setAttribute("retryAfterFormatted", formatTime(retryAfter));
             
-            // Reindirizza alla pagina di login con parametro di errore
             response.sendRedirect(request.getContextPath() + "/login?error=rate_limit");
             return false;
         }
@@ -134,11 +130,18 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         
         if (tracker != null) {
             int remaining = tracker.getRemainingAttempts(maxLoginAttempts);
-            System.out.println("GET /login - Tentativi rimanenti per IP " + clientIp + ": " + remaining);
-            
-            // Aggiungi alla request per il controller
             request.setAttribute("remainingAttempts", remaining);
+            
+            LogUtils.logApplication(LogUtils.Level.DEBUG, 
+                "GET /login - Remaining attempts for IP {}: {}", 
+                clientIp, remaining);
         }
+    }
+    
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, 
+                              Object handler, Exception ex) throws Exception {
+        LogUtils.clearContext();
     }
     
     private String formatTime(long seconds) {

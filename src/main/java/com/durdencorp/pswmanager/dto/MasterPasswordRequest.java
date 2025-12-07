@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Master password verification request")
 public class MasterPasswordRequest {
 
-	@Schema(description = "Master password to verify", example = "MySuperSecureMasterPassword123!", required = true)
+	@Schema(description = "Master password to verify", example = "MySuperSecureMasterPassword123!")
 	private String masterPassword;
 
 	public String getMasterPassword() {

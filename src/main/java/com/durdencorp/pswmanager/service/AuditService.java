@@ -1,11 +1,12 @@
-
 package com.durdencorp.pswmanager.service;
 
 import com.durdencorp.pswmanager.model.AuditLog;
 import com.durdencorp.pswmanager.repository.AuditLogRepository;
+import com.durdencorp.pswmanager.utils.LogUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 
 @Service
@@ -14,13 +15,22 @@ public class AuditService {
     @Autowired
     private AuditLogRepository auditLogRepository;
     
-    /**
-     * Logga un tentativo di accesso con master password
-     */
     public void logMasterPasswordAttempt(HttpServletRequest request, boolean success, String details) {
+        String clientIp = getClientIp(request);
+        
+        // Log strutturato nel file audit
+        LogUtils.setupAuditContext("master_password", "MASTER_PASSWORD_ATTEMPT");
+        LogUtils.logAudit("MASTER_PASSWORD_ATTEMPT", 
+            String.format("IP: %s, Success: %s, Details: %s", clientIp, success, details), 
+            success);
+        
+        // Log dettagliato per sicurezza
+        LogUtils.logLoginAttempt("master_password", success, clientIp, details);
+        
+        // Salva anche nel database
         AuditLog log = new AuditLog(
             "MASTER_PASSWORD_ATTEMPT",
-            getClientIp(request),
+            clientIp,
             request.getRequestURI(),
             success
         );
@@ -29,85 +39,65 @@ public class AuditService {
         log.setTimestamp(LocalDateTime.now());
         
         auditLogRepository.save(log);
-        
-        // Log a console per debugging
-        System.out.println(String.format(
-            "AUDIT LOG: %s - IP: %s - Success: %s - Details: %s",
-            LocalDateTime.now(),
-            getClientIp(request),
-            success,
-            details
-        ));
     }
     
-    /**
-     * Logga eventi relativi al database
-     */
     public void logDatabaseEvent(HttpServletRequest request, boolean success, String details) {
+        String clientIp = getClientIp(request);
+        
+        LogUtils.setupAuditContext("system", "DATABASE_OPERATION");
+        LogUtils.logAudit("DATABASE_OPERATION", 
+            String.format("IP: %s, Success: %s, Details: %s", clientIp, success, details), 
+            success);
+        
         AuditLog log = new AuditLog(
             "DATABASE_OPERATION",
-            getClientIp(request),
+            clientIp,
             request.getRequestURI(),
             success
         );
-        log.setUserAgent(request.getHeader("User-Agent"));
         log.setDetails(details);
-        log.setTimestamp(LocalDateTime.now());
-        
         auditLogRepository.save(log);
     }
     
-    /**
-     * Logga tentativi di rate limit superati
-     */
     public void logRateLimitExceeded(HttpServletRequest request, String endpoint) {
+        String clientIp = getClientIp(request);
+        
+        LogUtils.setupAuditContext(clientIp, "RATE_LIMIT_EXCEEDED");
+        LogUtils.logAudit("RATE_LIMIT_EXCEEDED", 
+            String.format("IP %s exceeded rate limit on %s", clientIp, endpoint), 
+            false);
+        
+        LogUtils.logSecurity(LogUtils.Level.WARN, 
+            "Rate limit exceeded for IP: {} on endpoint: {}", clientIp, endpoint);
+        
         AuditLog log = new AuditLog(
             "RATE_LIMIT_EXCEEDED",
-            getClientIp(request),
+            clientIp,
             endpoint,
             false
         );
-        log.setUserAgent(request.getHeader("User-Agent"));
-        log.setDetails("Troppe richieste dall'IP " + getClientIp(request));
-        log.setTimestamp(LocalDateTime.now());
-        
+        log.setDetails("Too many requests from this IP");
         auditLogRepository.save(log);
-        
-        System.out.println("AUDIT: Rate limit superato per IP: " + getClientIp(request));
     }
     
-    /**
-     * Logga operazioni sulle password
-     */
     public void logPasswordOperation(HttpServletRequest request, String operation, 
                                      boolean success, String details) {
+        String clientIp = getClientIp(request);
+        
+        LogUtils.setupAuditContext(clientIp, "PASSWORD_" + operation.toUpperCase());
+        LogUtils.logAudit("PASSWORD_OPERATION", 
+            String.format("Operation: %s, IP: %s, Success: %s, Details: %s", 
+                operation, clientIp, success, details), 
+            success);
+        
         AuditLog log = new AuditLog(
             "PASSWORD_" + operation.toUpperCase(),
-            getClientIp(request),
+            clientIp,
             request.getRequestURI(),
             success
         );
-        log.setUserAgent(request.getHeader("User-Agent"));
         log.setDetails(details);
-        log.setTimestamp(LocalDateTime.now());
-        
         auditLogRepository.save(log);
-    }
-    
-    /**
-     * Ottiene statistiche di accesso per un IP
-     */
-    public AccessStats getAccessStats(String clientIp) {
-        LocalDateTime lastHour = LocalDateTime.now().minusHours(1);
-        LocalDateTime lastDay = LocalDateTime.now().minusDays(1);
-        
-        long attemptsLastHour = auditLogRepository.countByClientIpAndTimestampAfterAndEventType(
-            clientIp, lastHour, "MASTER_PASSWORD_ATTEMPT");
-        
-        long attemptsLastDay = auditLogRepository.countByClientIpAndTimestampAfterAndEventType(
-            clientIp, lastDay, "MASTER_PASSWORD_ATTEMPT");
-        
-        return new AccessStats(attemptsLastHour, attemptsLastDay);
     }
     
     private String getClientIp(HttpServletRequest request) {
@@ -116,19 +106,5 @@ public class AuditService {
             return xfHeader.split(",")[0];
         }
         return request.getRemoteAddr();
-    }
-    
-    // Classe per statistiche di accesso
-    public static class AccessStats {
-        private final long attemptsLastHour;
-        private final long attemptsLastDay;
-        
-        public AccessStats(long attemptsLastHour, long attemptsLastDay) {
-            this.attemptsLastHour = attemptsLastHour;
-            this.attemptsLastDay = attemptsLastDay;
-        }
-        
-        public long getAttemptsLastHour() { return attemptsLastHour; }
-        public long getAttemptsLastDay() { return attemptsLastDay; }
     }
 }

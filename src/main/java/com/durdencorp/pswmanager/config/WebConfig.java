@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
         System.out.println("Registrando RateLimitInterceptor...");
         
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/login")  // Intercetta sia GET che POST a /login
+                .addPathPatterns("/login")
                 .excludePathPatterns(
                     "/css/**",
                     "/js/**", 

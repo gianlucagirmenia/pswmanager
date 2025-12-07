@@ -6,7 +6,7 @@ public class PasswordEntryDTO {
 	private Long id;
 	private String title;
 	private String username;
-	private String decryptedPassword; // Solo per visualizzazione
+	private String decryptedPassword;
 	private String url;
 	private String notes;
 	private String category;

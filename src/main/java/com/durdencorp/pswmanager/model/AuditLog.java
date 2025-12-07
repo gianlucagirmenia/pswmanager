@@ -1,4 +1,4 @@
-// src/main/java/com/durdencorp/pswmanager/model/AuditLog.java
+
 package com.durdencorp.pswmanager.model;
 
 import jakarta.persistence.*;
@@ -13,7 +13,7 @@ public class AuditLog {
 	private Long id;
 
 	@Column(name = "event_type", nullable = false)
-	private String eventType; // MASTER_PASSWORD_ATTEMPT, DATABASE_OPERATION, etc.
+	private String eventType;
 
 	@Column(name = "client_ip")
 	private String clientIp;
@@ -33,7 +33,6 @@ public class AuditLog {
 	@Column(name = "success")
 	private boolean success;
 
-	// Costruttori
 	public AuditLog() {
 		this.timestamp = LocalDateTime.now();
 	}
@@ -46,7 +45,6 @@ public class AuditLog {
 		this.success = success;
 	}
 
-	// Getters e Setters
 	public Long getId() {
 		return id;
 	}

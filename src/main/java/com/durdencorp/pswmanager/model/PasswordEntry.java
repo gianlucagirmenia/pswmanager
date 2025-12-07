@@ -1,7 +1,14 @@
 package com.durdencorp.pswmanager.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "password_entries")
@@ -35,7 +42,6 @@ public class PasswordEntry {
 	@Column(name = "category", nullable = false)
 	private String category = "Generale";
 
-	// Costruttori
 	public PasswordEntry() {
 		this.createdAt = LocalDateTime.now();
 		this.updatedAt = LocalDateTime.now();
@@ -75,7 +81,6 @@ public class PasswordEntry {
 		this.encryptedPassword = encryptedPassword;
 	}
 
-	// Getter e Setter
 	public Long getId() {
 		return id;
 	}

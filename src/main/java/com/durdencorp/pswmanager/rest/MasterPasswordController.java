@@ -1,5 +1,14 @@
 package com.durdencorp.pswmanager.rest;
 
+import com.durdencorp.pswmanager.service.AuditService;
+import com.durdencorp.pswmanager.service.PasswordEntryService;
+import com.durdencorp.pswmanager.utils.LogUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -7,16 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.durdencorp.pswmanager.service.AuditService;
-import com.durdencorp.pswmanager.service.PasswordEntryService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 
 @Controller
 @Tag(name = "Master Password", description = "Master password verification and management")
@@ -28,18 +27,21 @@ public class MasterPasswordController {
 	@Autowired
     private AuditService auditService;
 
-	// Pagina di login con master password
 	@GetMapping("/login")
 	public String showLoginPage(Model model, HttpServletRequest request,
 	                           @RequestParam(required = false) String error) {
 	    
+	    // Configura contesto logging
+	    LogUtils.setupRequestContext(request);
+	    
 	    if (passwordEntryService.isMasterPasswordSet()) {
+	        LogUtils.logApplication(LogUtils.Level.DEBUG, "User already logged in, redirecting to home");
 	        return "redirect:/";
 	    }
 	    
 	    HttpSession session = request.getSession();
 	    
-	    // 1. Gestisci rate limit error dalla sessione (se l'interceptor ha bloccato)
+	    // Gestisci rate limit error
 	    Boolean rateLimitError = (Boolean) session.getAttribute("rateLimitError");
 	    Long retryAfterSeconds = (Long) session.getAttribute("retryAfterSeconds");
 	    String retryAfterFormatted = (String) session.getAttribute("retryAfterFormatted");
@@ -54,23 +56,29 @@ public class MasterPasswordController {
 	        session.removeAttribute("retryAfterSeconds");
 	        session.removeAttribute("retryAfterFormatted");
 	        
-	        System.out.println("Mostrando pagina con errore rate limit: " + retryAfterFormatted);
+	        LogUtils.logSecurity(LogUtils.Level.INFO, 
+	            "Showing rate limit page for IP: {}, retry after: {}", 
+	            getClientIp(request), retryAfterFormatted);
 	    }
 	    
-	    // 2. Controlla anche il parametro URL
+	    // Controlla parametro URL
 	    if ("rate_limit".equals(error) && !model.containsAttribute("rateLimitError")) {
 	        model.addAttribute("rateLimitError", true);
 	        model.addAttribute("genericRateLimitMessage", true);
 	    }
 	    
-	    // 3. Leggi remainingAttempts dalla request (aggiunto dall'interceptor)
+	    // Leggi remainingAttempts dalla request
 	    Integer remainingAttempts = (Integer) request.getAttribute("remainingAttempts");
 	    if (remainingAttempts != null) {
 	        model.addAttribute("remainingAttempts", remainingAttempts);
-	        System.out.println("Tentativi rimanenti per la pagina: " + remainingAttempts);
+	        LogUtils.logApplication(LogUtils.Level.DEBUG, 
+	            "Remaining attempts for page: {}", remainingAttempts);
 	    }
 	    
-	    return "master-login"; // Il tuo template esistente
+	    LogUtils.logApplication(LogUtils.Level.INFO, "Login page displayed");
+	    LogUtils.clearContext();
+	    
+	    return "master-login";
 	}
 
 	@Operation(summary = "Verify master password", description = "Check if the provided master password is correct to unlock the application")
@@ -84,9 +92,15 @@ public class MasterPasswordController {
 	                                   RedirectAttributes redirectAttributes,
 	                                   HttpServletRequest request) {
 	    
+	    long startTime = System.currentTimeMillis();
+	    String clientIp = getClientIp(request);
+	    
+	    // Configura contesto logging
+	    LogUtils.setupRequestContext(request);
+	    
 	    try {
-	        String clientIp = getClientIp(request);
-	        System.out.println("=== CONTROLLER LOGIN - Tentativo da IP: " + clientIp + " ===");
+	        LogUtils.logApplication(LogUtils.Level.INFO, 
+	            "Login attempt from IP: {}", clientIp);
 	        
 	        auditService.logMasterPasswordAttempt(request, false, "Tentativo di accesso in corso");
 
@@ -97,17 +111,24 @@ public class MasterPasswordController {
 	            auditService.logMasterPasswordAttempt(request, false, 
 	                "Master password non valida - Tentativo fallito");
 	            
-	            System.out.println("❌ Tentativo fallito da IP " + clientIp);
+	            LogUtils.logSecurity(LogUtils.Level.WARN, 
+	                "Failed login attempt from IP: {}", clientIp);
 	            
 	            redirectAttributes.addFlashAttribute("errorMessage",
 	                    "Master password non valida.");
 	            return "redirect:/login";
 	        }
 	        
+	        // Login riuscito
 	        auditService.logMasterPasswordAttempt(request, true, "Accesso effettuato con successo");
-	        System.out.println("✅ Accesso RIUSCITO da IP: " + clientIp);
+	        
+	        LogUtils.logSecurity(LogUtils.Level.INFO, 
+	            "Successful login from IP: {}", clientIp);
+	        
+	        LogUtils.logApplication(LogUtils.Level.INFO, 
+	            "User logged in successfully");
 
-	        // ESECUZIONE AUTOMATICA DELLA SANITIZZAZIONE
+	        // Sanitizzazione automatica
 	        boolean needsSanitization = passwordEntryService.checkAndSanitizeIfNeeded();
 
 	        if (needsSanitization) {
@@ -115,39 +136,53 @@ public class MasterPasswordController {
 	                    "Accesso effettuato con successo! ✅ Database sanitizzato automaticamente.");
 	            auditService.logDatabaseEvent(request, true, 
 	                    "Database sanitizzato automaticamente dopo l'accesso");
+	            
+	            LogUtils.logApplication(LogUtils.Level.INFO, 
+	                "Database auto-sanitized after login");
 	        } else {
 	            redirectAttributes.addFlashAttribute("successMessage", "Accesso effettuato con successo!");
 	        }
 
+	        // Log performance
+	        long duration = System.currentTimeMillis() - startTime;
+	        LogUtils.logPerformance("login_verification", duration);
+	        
 	        return "redirect:/";
 
 	    } catch (Exception e) {
 	        auditService.logMasterPasswordAttempt(request, false, 
 	                "Errore durante la verifica: " + e.getMessage());
-	        System.out.println("ERRORE nel login: " + e.getMessage());
+	        
+	        LogUtils.logError("MasterPasswordController", "verifyMasterPassword", e);
 	        
 	        redirectAttributes.addFlashAttribute("errorMessage",
 	                "Si è verificato un errore durante l'accesso. Riprova.");
 	        
 	        return "redirect:/login";
+	    } finally {
+	        LogUtils.clearContext();
 	    }
 	}
 	
-	/**
-	 * Ottiene l'IP del client
-	 */
+	@GetMapping("/logout")
+	public String logout(RedirectAttributes redirectAttributes, HttpServletRequest request) {
+	    LogUtils.setupRequestContext(request);
+	    
+	    passwordEntryService.clearSession();
+	    redirectAttributes.addFlashAttribute("successMessage", "Logout effettuato con successo!");
+	    
+	    LogUtils.logSecurity(LogUtils.Level.INFO, 
+	        "User logged out from IP: {}", getClientIp(request));
+	    LogUtils.clearContext();
+	    
+	    return "redirect:/login";
+	}
+	
 	private String getClientIp(HttpServletRequest request) {
 	    String xfHeader = request.getHeader("X-Forwarded-For");
 	    if (xfHeader != null) {
 	        return xfHeader.split(",")[0].trim();
 	    }
 	    return request.getRemoteAddr();
-	}
-
-	@GetMapping("/logout")
-	public String logout(RedirectAttributes redirectAttributes) {
-		passwordEntryService.clearSession();
-		redirectAttributes.addFlashAttribute("successMessage", "Logout effettuato con successo!");
-		return "redirect:/login";
 	}
 }

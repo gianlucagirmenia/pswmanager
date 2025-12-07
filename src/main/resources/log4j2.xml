@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+        <Property name="APP_LOG_ROOT">./logs</Property>
+        <Property name="AUDIT_LOG_FILE">${APP_LOG_ROOT}/audit.log</Property>
+        <Property name="SECURITY_LOG_FILE">${APP_LOG_ROOT}/security.log</Property>
+        <Property name="APPLICATION_LOG_FILE">${APP_LOG_ROOT}/application.log</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- Application Log File -->
+        <RollingFile name="ApplicationFile" fileName="${APPLICATION_LOG_FILE}"
+                     filePattern="${APPLICATION_LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <!-- Security Log File (per audit e sicurezza) -->
+        <RollingFile name="SecurityFile" fileName="${SECURITY_LOG_FILE}"
+                     filePattern="${SECURITY_LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <!-- Audit Log File (solo eventi audit) -->
+        <RollingFile name="AuditFile" fileName="${AUDIT_LOG_FILE}"
+                     filePattern="${AUDIT_LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{clientIp}|%X{userId}|%X{eventType}|%X{requestPath}|%msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <!-- Async Appenders per performance -->
+        <Async name="AsyncApplication">
+            <AppenderRef ref="ApplicationFile"/>
+        </Async>
+        
+        <Async name="AsyncSecurity">
+            <AppenderRef ref="SecurityFile"/>
+        </Async>
+        
+        <Async name="AsyncAudit">
+            <AppenderRef ref="AuditFile"/>
+        </Async>
+    </Appenders>
+
+    <Loggers>
+        <!-- Logger Root -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AsyncApplication"/>
+        </Root>
+
+        <!-- Logger per sicurezza -->
+        <Logger name="com.durdencorp.pswmanager.security" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AsyncSecurity"/>
+        </Logger>
+
+        <!-- Logger per audit -->
+        <Logger name="com.durdencorp.pswmanager.audit" level="INFO" additivity="false">
+            <AppenderRef ref="AsyncAudit"/>
+        </Logger>
+
+        <!-- Logger per database/Hibernate -->
+        <Logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Logger per Spring -->
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.web" level="INFO"/>
+        <Logger name="org.springframework.security" level="DEBUG"/>
+
+        <!-- Logger per la tua applicazione -->
+        <Logger name="com.durdencorp.pswmanager" level="DEBUG"/>
+    </Loggers>
+</Configuration>
