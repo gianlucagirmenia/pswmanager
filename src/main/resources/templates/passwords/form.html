@@ -300,9 +300,9 @@
 				        <button type="submit" th:text="${passwordEntryForm.id == null} ? 'Salva Password' : 'Aggiorna Password'">
 				            Salva
 				        </button>
-				        <a th:href="@{/}" class="cancel-btn" style="text-decoration: none; color: white; display: inline-block; padding: 12px 20px;">
-				            Annulla
-				        </a>
+						<button type="button" class="cancel-btn" onclick="window.location.href='/'">
+						    Annulla
+						</button>
 				</div>
             </form>
         </div>
