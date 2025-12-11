@@ -1,12 +1,15 @@
 package com.durdencorp.pswmanager.repository;
 
-import com.durdencorp.pswmanager.model.PasswordEntry;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.durdencorp.pswmanager.model.PasswordEntry;
 
 @Repository
 public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Long> {
@@ -34,4 +37,11 @@ public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Lo
 
 	@Query("SELECT p FROM PasswordEntry p WHERE p.category = :category AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.username) LIKE LOWER(CONCAT('%', :query, '%')))")
 	List<PasswordEntry> findByCategoryAndSearchQuery(@Param("category") String category, @Param("query") String query);
+	
+	Page<PasswordEntry> findByCategory(String category, Pageable pageable);
+    Page<PasswordEntry> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    Page<PasswordEntry> findByCategoryAndTitleContainingIgnoreCase(String category, String title, Pageable pageable);
+    
+    long countByCategory(String category);
+    
 }

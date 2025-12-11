@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -314,6 +316,34 @@ public class PasswordEntryService {
 		return checkAllPasswordsForBreaches().stream().filter(report -> report.getBreachCheckResult().isCompromised())
 				.collect(Collectors.toList());
 	}
+	
+	public Page<PasswordEntryDTO> findAllPaginated(Pageable pageable) {
+        Page<PasswordEntry> page = repository.findAll(pageable);
+        return page.map(this::convertToDTO);
+    }
+	
+	public Page<PasswordEntryDTO> findByCategoryPaginated(String category, Pageable pageable) {
+        Page<PasswordEntry> page = repository.findByCategory(category, pageable);
+        return page.map(this::convertToDTO);
+    }
+	
+	public Page<PasswordEntryDTO> searchPaginated(String query, Pageable pageable) {
+        Page<PasswordEntry> page = repository.findByTitleContainingIgnoreCase(query, pageable);
+        return page.map(this::convertToDTO);
+    }
+	
+	public Page<PasswordEntryDTO> findByCategoryAndSearchPaginated(String category, String query, Pageable pageable) {
+        Page<PasswordEntry> page = repository.findByCategoryAndTitleContainingIgnoreCase(category, query, pageable);
+        return page.map(this::convertToDTO);
+    }
+	
+	public long countAll() {
+        return repository.count();
+    }
+	
+	public long countByCategory(String category) {
+        return repository.countByCategory(category);
+    }
 
 	public static class PasswordBreachReport {
 		private final Long entryId;

@@ -1,0 +1,76 @@
+<!-- pagination.html - Con prima/ultima pagina -->
+<div th:fragment="pagination" class="pagination-container" th:if="${totalPages > 1}">
+	
+	<!-- 
+    <div class="pagination-info">
+        <span th:text="'Pagina ' + (currentPage + 1) + ' di ' + totalPages"></span>
+        <span class="separator">•</span>
+        <span th:text="startItem + '-' + endItem + ' di ' + totalItems"></span>
+    </div>
+	-->
+    
+    <nav class="pagination-nav">
+        <ul class="pagination">
+            <!-- Prima pagina -->
+            <li th:class="'page-item' + (${currentPage == 0} ? ' disabled' : '')">
+                <a th:if="${currentPage > 0}" class="page-link" 
+                   th:href="@{/(page=0, size=${pageSize}, search=${searchQuery}, category=${currentCategory})}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <span th:unless="${currentPage > 0}" class="page-link disabled">
+                    <i class="fas fa-angle-double-left"></i>
+                </span>
+            </li>
+            
+            <!-- Pagina precedente -->
+            <li th:class="'page-item' + (${currentPage == 0} ? ' disabled' : '')">
+                <a th:if="${currentPage > 0}" class="page-link" 
+                   th:href="@{/(page=${currentPage - 1}, size=${pageSize}, search=${searchQuery}, category=${currentCategory})}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <span th:unless="${currentPage > 0}" class="page-link disabled">
+                    <i class="fas fa-chevron-left"></i>
+                </span>
+            </li>
+            
+            <!-- Pagina corrente (opzionale) -->
+            <li class="page-item disabled">
+                <span class="page-link" th:text="${currentPage + 1}"></span>
+            </li>
+            
+            <!-- Pagina successiva -->
+            <li th:class="'page-item' + (${currentPage == totalPages - 1} ? ' disabled' : '')">
+                <a th:if="${currentPage < totalPages - 1}" class="page-link" 
+                   th:href="@{/(page=${currentPage + 1}, size=${pageSize}, search=${searchQuery}, category=${currentCategory})}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${currentPage < totalPages - 1}" class="page-link disabled">
+                    <i class="fas fa-chevron-right"></i>
+                </span>
+            </li>
+            
+            <!-- Ultima pagina -->
+            <li th:class="'page-item' + (${currentPage == totalPages - 1} ? ' disabled' : '')">
+                <a th:if="${currentPage < totalPages - 1}" class="page-link" 
+                   th:href="@{/(page=${totalPages - 1}, size=${pageSize}, search=${searchQuery}, category=${currentCategory})}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                <span th:unless="${currentPage < totalPages - 1}" class="page-link disabled">
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+            </li>
+        </ul>
+    </nav>
+    
+	<!-- 
+    <div class="page-size-selector">
+        <label for="pageSizeSelect">Elementi per pagina:</label>
+        <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+            <option value="5" th:selected="${pageSize == 5}">5</option>
+            <option value="10" th:selected="${pageSize == 10}">10</option>
+            <option value="20" th:selected="${pageSize == 20}">20</option>
+            <option value="50" th:selected="${pageSize == 50}">50</option>
+        </select>
+    </div>
+	-->
+</div>

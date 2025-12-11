@@ -7,6 +7,9 @@
     
     <!-- Collegamento al CSS esterno -->
     <link th:href="@{~/css/password.css}" rel="stylesheet">
+	
+	<!-- FontAwesome per icone paginazione (opzionale) -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -19,10 +22,11 @@
         <div th:replace="fragments/top-bar :: topBar"></div>
 
         <!-- Include i filtri per categoria -->
-        <div th:replace="fragments/categories :: categoryFilters"></div>
+        <!--  <div th:replace="fragments/categories :: categoryFilters"></div> -->
         
         <!-- Include la tabella delle password -->
         <div th:replace="fragments/password-table :: passwordTable"></div>
+		
     </div>
 
     <!-- Collegamento al JavaScript esterno -->

@@ -1,10 +1,14 @@
 package com.durdencorp.pswmanager.rest;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,29 +32,73 @@ public class WebController {
     private PasswordEntryService passwordEntryService;
     
     @GetMapping("/")
-    public String home(Model model) {
+    public String home(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category, // Aggiungi questo
+            Model model) {
+        
         try {
             if (!passwordEntryService.isMasterPasswordSet()) {
                 return "redirect:/login";
             }
             
-            List<PasswordEntryDTO> passwords = passwordEntryService.findAll();
-            int totalCount = passwords != null ? passwords.size() : 0;
+            Page<PasswordEntryDTO> passwordPage;
             
-            model.addAttribute("passwords", passwords != null ? passwords : new ArrayList<>());
-            model.addAttribute("totalCount", totalCount);
+            if (category != null && !category.isEmpty()) {
+                // Se c'è categoria, usa il filtro per categoria
+                if (search != null && !search.trim().isEmpty()) {
+                    passwordPage = passwordEntryService.findByCategoryAndSearchPaginated(
+                        category, search, PageRequest.of(page, size));
+                    model.addAttribute("searchQuery", search);
+                } else {
+                    passwordPage = passwordEntryService.findByCategoryPaginated(
+                        category, PageRequest.of(page, size));
+                }
+                model.addAttribute("currentCategory", category);
+            } else {
+                // Nessuna categoria specificata
+                if (search != null && !search.trim().isEmpty()) {
+                    passwordPage = passwordEntryService.searchPaginated(search, PageRequest.of(page, size));
+                    model.addAttribute("searchQuery", search);
+                } else {
+                    passwordPage = passwordEntryService.findAllPaginated(PageRequest.of(page, size));
+                }
+            }
             
+            // Calcolo informazioni paginazione
+            int totalPages = passwordPage.getTotalPages();
+            long totalItems = passwordPage.getTotalElements();
+            
+            model.addAttribute("passwords", passwordPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("pageSize", size);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("totalItems", totalItems);
+            
+            // Calcola range visualizzato
+            int startItem = page * size + 1;
+            int endItem = Math.min((page + 1) * size, (int) totalItems);
+            model.addAttribute("startItem", startItem);
+            model.addAttribute("endItem", endItem);
+            
+            // Categorie e statistiche
             model.addAttribute("categories", passwordEntryService.getAllCategories());
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
+            
+            // Calcola totale generale
+            long totalAll = passwordEntryService.countAll();
+            model.addAttribute("totalCount", totalAll);
             
             return "passwords/list";
             
         } catch (Exception e) {
             model.addAttribute("passwords", new ArrayList<>());
-            model.addAttribute("totalCount", 0);
             model.addAttribute("errorMessage", "Errore nel caricamento: " + e.getMessage());
             model.addAttribute("categories", new ArrayList<>());
             model.addAttribute("categoryStats", new HashMap<>());
+            model.addAttribute("totalCount", 0);
             return "passwords/list";
         }
     }
@@ -114,51 +162,55 @@ public class WebController {
     
     // Filtra per categoria
     @GetMapping("/category/{category}")
-    public String filterByCategory(@PathVariable String category, Model model) {
+    public String filterByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String search,
+            Model model) {
+        
         try {
-            List<PasswordEntryDTO> passwords = passwordEntryService.findByCategory(category);
-            int filteredCount = passwords.size();
+            Page<PasswordEntryDTO> passwordPage;
             
-            model.addAttribute("passwords", passwords);
+            if (search != null && !search.trim().isEmpty()) {
+                // Ricerca nella categoria
+                passwordPage = passwordEntryService.findByCategoryAndSearchPaginated(
+                    category, search, PageRequest.of(page, size));
+                model.addAttribute("searchQuery", search);
+            } else {
+                // Solo categoria
+                passwordPage = passwordEntryService.findByCategoryPaginated(
+                    category, PageRequest.of(page, size));
+            }
+            
+            // Informazioni paginazione
+            int totalPages = passwordPage.getTotalPages();
+            long totalItems = passwordPage.getTotalElements();
+            long totalAll = passwordEntryService.countAll();
+            
+            model.addAttribute("passwords", passwordPage.getContent());
             model.addAttribute("currentCategory", category);
-            model.addAttribute("filteredCount", filteredCount); // CONTEggio FILTRATO
+            model.addAttribute("currentPage", page);
+            model.addAttribute("pageSize", size);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("totalItems", totalItems);
+            model.addAttribute("totalCount", totalAll);
+            
+            // Range visualizzato
+            int startItem = page * size + 1;
+            int endItem = Math.min((page + 1) * size, (int) totalItems);
+            model.addAttribute("startItem", startItem);
+            model.addAttribute("endItem", endItem);
+            
             model.addAttribute("categories", passwordEntryService.getAllCategories());
             model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
             
-            // Calcola il totale generale per il badge "Tutte"
-            List<PasswordEntryDTO> allPasswords = passwordEntryService.findAll();
-            model.addAttribute("totalCount", allPasswords.size());
-            
             return "passwords/list";
-        } catch (SecurityException e) {
-            return "redirect:/login";
+            
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Errore nel filtro per categoria: " + e.getMessage());
-            model.addAttribute("categories", new ArrayList<>());
-            model.addAttribute("categoryStats", new HashMap<>());
-            model.addAttribute("totalCount", 0);
-            return home(model);
-        }
-    }
-    
-    // Ricerca all'interno di una categoria
-    @GetMapping("/category/{category}/search")
-    public String searchInCategory(@PathVariable String category, 
-                                 @RequestParam String query, 
-                                 Model model) {
-        try {
-            List<PasswordEntryDTO> passwords = passwordEntryService.findByCategoryAndSearch(category, query);
-            model.addAttribute("passwords", passwords);
-            model.addAttribute("currentCategory", category);
-            model.addAttribute("searchQuery", query);
-            model.addAttribute("categories", passwordEntryService.getAllCategories());
-            model.addAttribute("categoryStats", passwordEntryService.getCategoryStats());
-            return "passwords/list";
-        } catch (SecurityException e) {
-            return "redirect:/login";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Errore nella ricerca: " + e.getMessage());
-            return home(model);
+            // Chiama home con i parametri corretti
+            return home(page, size, search, category, model);
         }
     }
     
@@ -187,6 +239,32 @@ public class WebController {
             redirectAttributes.addFlashAttribute("errorMessage", "❌ Errore nella sanitizzazione: " + e.getMessage());
         }
         return "redirect:/";
+    }
+    
+    @ModelAttribute("buildPageUrl")
+    public Function<Integer, String> buildPageUrl(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category) {
+        
+        return targetPage -> {
+            StringBuilder url = new StringBuilder("/?");
+            
+            // Aggiungi parametri
+            url.append("page=").append(targetPage);
+            url.append("&size=").append(size);
+            
+            if (search != null && !search.isEmpty()) {
+                url.append("&search=").append(URLEncoder.encode(search, StandardCharsets.UTF_8));
+            }
+            
+            if (category != null && !category.isEmpty()) {
+                url.append("&category=").append(URLEncoder.encode(category, StandardCharsets.UTF_8));
+            }
+            
+            return url.toString();
+        };
     }
     
 }
