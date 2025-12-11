@@ -1,18 +1,65 @@
 <!-- top-bar.html -->
 <div th:fragment="topBar">
-	<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-		<div style="display: flex; gap: 10px; align-items: center;">
-			<!-- Bottone Sanitizzazione -->
-			<button type="button" class="tool-btn" onclick="window.location.href='/security'">
-				🛡️ Security Dashboard
-			</button>
-		</div>
-
-		<div style="display: flex; gap: 10px; align-items: center;">
-			<a th:href="@{/logout}" class="clear-search-btn"
-				style="text-decoration: none; color: white; display: inline-block;">
-				🚪 Logout
-			</a>
-		</div>
-	</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <!-- SEZIONE SINISTRA -->
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <!-- Security Dashboard -->
+            <button type="button" class="tool-btn" onclick="window.location.href='/security'">
+                <span class="desktop-text">🛡️ Security Dashboard</span>
+                <span class="mobile-text">🛡️</span>
+            </button>
+            
+            <!-- Dropdown Esporta -->
+            <div class="dropdown">
+                <button class="export-btn" onclick="toggleExportMenu()">
+                    <span class="desktop-text">💾 Esporta</span>
+                    <span class="mobile-text">💾</span>
+                </button>
+                <div id="exportMenu" class="dropdown-menu">
+                    <button onclick="exportEncrypted()" class="dropdown-item">
+                        🔒 Backup Cifrato (.enc)
+                    </button>
+                    <button onclick="exportCsv()" class="dropdown-item">
+                        📄 Metadati CSV
+                    </button>
+                    <button onclick="exportJson()" class="dropdown-item">
+                        📊 Dati JSON (debug)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Dropdown Importa -->
+            <div class="dropdown">
+                <button class="import-btn" onclick="toggleImportMenu()">
+                    <span class="desktop-text">📤 Importa</span>
+                    <span class="mobile-text">📤</span>
+                </button>
+                <div id="importMenu" class="dropdown-menu">
+                    <div style="margin-bottom: 10px;">
+                        <label>
+                            <input type="checkbox" id="overwriteCheckbox">
+                            Sovrascrivi duplicati
+                        </label>
+                    </div>
+                    <button onclick="triggerImport('encrypted')" class="dropdown-item">
+                        🔒 Backup Cifrato
+                    </button>
+                    <button onclick="triggerImport('csv')" class="dropdown-item">
+                        📄 File CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEZIONE DESTRA: Logout -->
+        <div style="margin-left: auto;">
+            <a th:href="@{/logout}" class="clear-search-btn">
+                <span class="desktop-text">🚪 Logout</span>
+                <span class="mobile-text">🚪</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Input file nascosto -->
+    <input type="file" id="importFile" accept=".enc,.csv" style="display: none;">
 </div>

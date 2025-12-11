@@ -293,3 +293,220 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.value = searchQuery;
     }
 });
+
+function exportEncrypted() {
+    fetch('/api/export/encrypted')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `passwords-backup-${new Date().toISOString().split('T')[0]}.enc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            alert('✅ Backup cifrato esportato con successo!');
+        })
+        .catch(error => {
+            console.error('Errore export:', error);
+            alert('❌ Errore durante l\'export: ' + error.message);
+        });
+}
+
+function exportCsv() {
+    fetch('/api/export/csv')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `passwords-metadata-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            alert('✅ CSV esportato con successo!');
+        })
+        .catch(error => {
+            console.error('Errore export CSV:', error);
+            alert('❌ Errore durante l\'export CSV: ' + error.message);
+        });
+}
+
+function exportJson() {
+    fetch('/api/export/json')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `passwords-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            alert('✅ JSON esportato con successo!');
+        })
+        .catch(error => {
+            console.error('Errore export JSON:', error);
+            alert('❌ Errore durante l\'export JSON: ' + error.message);
+        });
+}
+
+function triggerImport(type) {
+    const fileInput = document.getElementById('importFile');
+    if (!fileInput) {
+        console.error('Input file non trovato');
+        return;
+    }
+    
+    fileInput.accept = type === 'encrypted' ? '.enc' : '.csv';
+    fileInput.onchange = function(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleImportFile(e.target.files[0], type);
+        }
+    };
+    fileInput.click();
+}
+
+function handleImportFile(file, type) {
+    const overwrite = document.getElementById('overwriteCheckbox')?.checked || false;
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const endpoint = type === 'encrypted' ? '/api/import/encrypted' : '/api/import/csv';
+    
+    fetch(`${endpoint}?overwrite=${overwrite}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(result => {
+        if (result.success) {
+            alert(`✅ Import completato!\nImportati: ${result.importedCount}\nSaltati: ${result.skippedCount}\nErrori: ${result.errorCount}`);
+            location.reload(); // Ricarica la pagina
+        } else {
+            alert(`❌ Import fallito: ${result.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Errore import:', error);
+        alert('❌ Errore durante l\'import: ' + error.message);
+    });
+}
+
+// Funzione di utility per mostrare notifiche
+function showToast(message, type = 'info') {
+    try {
+        // Rimuovi toast esistenti
+        document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = 'custom-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed; top: 20px; right: 20px; 
+            padding: 15px; border-radius: 5px; z-index: 9999;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+            color: white; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-width: 400px; word-wrap: break-word;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    } catch (e) {
+        console.error('Errore in showToast:', e);
+        alert(message); // Fallback se showToast fallisce
+    }
+}
+
+// Chiudi i menu quando si clicca altrove
+document.addEventListener('click', function(event) {
+    const exportMenu = document.getElementById('exportMenu');
+    const importMenu = document.getElementById('importMenu');
+    const exportBtn = document.querySelector('.export-btn');
+    const importBtn = document.querySelector('.import-btn');
+    
+    // Se si clicca fuori dai menu, chiudili
+    if (exportMenu && exportMenu.style.display === 'block') {
+        const clickedInExport = exportMenu.contains(event.target) || 
+                               (exportBtn && exportBtn.contains(event.target));
+        if (!clickedInExport) {
+            exportMenu.style.display = 'none';
+        }
+    }
+    
+    if (importMenu && importMenu.style.display === 'block') {
+        const clickedInImport = importMenu.contains(event.target) || 
+                               (importBtn && importBtn.contains(event.target));
+        if (!clickedInImport) {
+            importMenu.style.display = 'none';
+        }
+    }
+});
+
+// Gestione dei dropdown
+let currentOpenMenu = null;
+
+function toggleExportMenu() {
+    const menu = document.getElementById('exportMenu');
+    if (menu) {
+        const importMenu = document.getElementById('importMenu');
+        if (importMenu) importMenu.style.display = 'none';
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+}
+
+function toggleImportMenu() {
+    const menu = document.getElementById('importMenu');
+    if (menu) {
+        const exportMenu = document.getElementById('exportMenu');
+        if (exportMenu) exportMenu.style.display = 'none';
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+}
+
+// Chiudi i menu quando si clicca altrove
+document.addEventListener('click', function(event) {
+    const exportMenu = document.getElementById('exportMenu');
+    const importMenu = document.getElementById('importMenu');
+    const exportBtn = document.querySelector('.export-btn');
+    const importBtn = document.querySelector('.import-btn');
+    
+    // Verifica che gli elementi esistano prima di usare contains()
+    if (exportMenu && exportBtn) {
+        const isClickInsideExport = exportMenu.contains(event.target) || 
+                                    exportBtn.contains(event.target);
+        
+        if (!isClickInsideExport) {
+            exportMenu.style.display = 'none';
+            if (currentOpenMenu === 'export') currentOpenMenu = null;
+        }
+    }
+    
+    if (importMenu && importBtn) {
+        const isClickInsideImport = importMenu.contains(event.target) || 
+                                    importBtn.contains(event.target);
+        
+        if (!isClickInsideImport) {
+            importMenu.style.display = 'none';
+            if (currentOpenMenu === 'import') currentOpenMenu = null;
+        }
+    }
+});
+
+// Chiudi i menu quando si preme ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const exportMenu = document.getElementById('exportMenu');
+        const importMenu = document.getElementById('importMenu');
+        
+        if (exportMenu) exportMenu.style.display = 'none';
+        if (importMenu) importMenu.style.display = 'none';
+        currentOpenMenu = null;
+    }
+});
+
