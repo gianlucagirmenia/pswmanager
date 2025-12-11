@@ -105,9 +105,6 @@
 		    <groupId>org.apache.logging.log4j</groupId>
 		    <artifactId>log4j-web</artifactId>
 		</dependency>
-		
-		<!-- NOTA: PostgreSQL è stato rimosso dalle dipendenze principali -->
-		<!-- Verrà aggiunto solo nel profilo railway -->
     
 	</dependencies>
 	
@@ -122,37 +119,6 @@
 	      <spring.profiles.active>default</spring.profiles.active>
 	      <build.profile.id>default</build.profile.id>
 	    </properties>
-	  </profile>
-	  
-	  <!-- Profilo per Railway (produzione) -->
-	  <profile>
-	    <id>railway</id>
-	    <properties>
-	      <spring.profiles.active>railway</spring.profiles.active>
-	      <build.profile.id>railway</build.profile.id>
-	    </properties>
-	    <dependencies>
-	      <!-- PostgreSQL solo per Railway -->
-	      <dependency>
-	        <groupId>org.postgresql</groupId>
-	        <artifactId>postgresql</artifactId>
-	        <version>${postgresql.version}</version>
-	        <scope>runtime</scope>
-	      </dependency>
-	    </dependencies>
-	    <build>
-	      <plugins>
-	        <plugin>
-	          <groupId>org.springframework.boot</groupId>
-	          <artifactId>spring-boot-maven-plugin</artifactId>
-	          <configuration>
-	            <profiles>
-	              <profile>railway</profile>
-	            </profiles>
-	          </configuration>
-	        </plugin>
-	      </plugins>
-	    </build>
 	  </profile>
 	</profiles>
 
