@@ -44,4 +44,11 @@ public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Lo
     
     long countByCategory(String category);
     
+    @Query("SELECT COUNT(p) FROM PasswordEntry p WHERE p.title = :title AND p.username = :username")
+    long countByTitleAndUsername(@Param("title") String title, @Param("username") String username);
+    
+    @Query("SELECT p.id FROM PasswordEntry p WHERE p.title = :title AND p.username = :username")
+    Long findIdByTitleAndUsername(@Param("title") String title, @Param("username") String username);
+    
+    
 }

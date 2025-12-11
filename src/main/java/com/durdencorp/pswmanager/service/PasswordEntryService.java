@@ -307,6 +307,30 @@ public class PasswordEntryService {
 
 		return reports;
 	}
+	
+	/**
+     * Trova tutte le PasswordEntry (senza decrittazione, per export)
+     */
+    @Transactional(readOnly = true)
+    public List<PasswordEntry> findAllRaw() {
+        return repository.findAll();
+    }
+    
+    /**
+     * Verifica se esiste una password con stesso titolo e username
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByTitleAndUsername(String title, String username) {
+        return repository.countByTitleAndUsername(title, username) > 0;
+    }
+    
+    /**
+     * Trova ID per titolo e username
+     */
+    @Transactional(readOnly = true)
+    public Long findIdByTitleAndUsername(String title, String username) {
+        return repository.findIdByTitleAndUsername(title, username);
+    }
 
 	/**
 	 * Trova password compromesse
