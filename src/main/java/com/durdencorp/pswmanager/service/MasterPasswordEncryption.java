@@ -67,8 +67,6 @@ public class MasterPasswordEncryption {
 	public String encrypt(String data) {
 		try {
 			LogUtils.logApplication(LogUtils.Level.DEBUG, "=== ENCRYPT ===");
-			LogUtils.logApplication(LogUtils.Level.DEBUG,
-					"Dati da cifrare: '" + data + "' (lunghezza: " + (data != null ? data.length() : 0) + ")");
 
 			if (data == null)
 				return null;
@@ -108,10 +106,6 @@ public class MasterPasswordEncryption {
 	public String decrypt(String encryptedData) {
 		try {
 			LogUtils.logApplication(LogUtils.Level.DEBUG, "=== DECRYPT ===");
-			LogUtils.logApplication(LogUtils.Level.DEBUG,
-					"Dati da decifrare: " + (encryptedData != null
-							? encryptedData.substring(0, Math.min(20, encryptedData.length())) + "..."
-							: "null"));
 
 			if (encryptedData == null)
 				return null;
@@ -148,7 +142,6 @@ public class MasterPasswordEncryption {
 			byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 			String result = new String(decryptedBytes, "UTF-8");
 
-			LogUtils.logApplication(LogUtils.Level.DEBUG, "Decifratura COMPLETATA: -> '" + result + "'");
 			return result;
 
 		} catch (Exception e) {

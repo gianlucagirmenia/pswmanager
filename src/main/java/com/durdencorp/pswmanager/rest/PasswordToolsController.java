@@ -47,7 +47,6 @@ public class PasswordToolsController {
 	@GetMapping("/analyze")
 	public Map<String, Object> analyzePassword(@RequestParam String password) {
 		LogUtils.logApplication(LogUtils.Level.INFO, "******* ANALISI PASSWORD *******");
-		LogUtils.logApplication(LogUtils.Level.INFO, "Password ricevuta: " + (password != null ? "***" : "null"));
 
 		try {
 			PasswordStrengthService.PasswordStrength strength = passwordStrengthService.analyzeStrength(password);
