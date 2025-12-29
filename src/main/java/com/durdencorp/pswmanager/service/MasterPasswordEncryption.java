@@ -92,8 +92,6 @@ public class MasterPasswordEncryption {
 
 			String result = Base64.getEncoder().encodeToString(combined);
 
-			LogUtils.logApplication(LogUtils.Level.DEBUG, "Cifratura COMPLETATA: '" + data + "' -> "
-					+ result.substring(0, Math.min(20, result.length())) + "...");
 			return result;
 
 		} catch (Exception e) {
